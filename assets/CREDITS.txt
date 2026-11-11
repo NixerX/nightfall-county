@@ -1,0 +1,15 @@
+3D models by Quaternius (https://quaternius.com), released under CC0 1.0 (public domain).
+Packs used: Modular Men, Modular Women, Survival Pack, Nature Pack, House Interior Pack, Street Pack.
+Zombie variants are the same character models recolored at runtime by the game.
+
+Surface textures (assets/textures): ambientCG, https://ambientcg.com, CC0 1.0. Asphalt, wet asphalt, concrete, brick, plaster, rusted metal and hospital tile sets.
+
+Sound effects (assets/sounds): Kenney (kenney.nl), CC0 1.0. Footsteps, doors, creaks, chopping, knife, cloth, metal clicks, explosions.
+Ground and building textures (assets/textures/ground and roof/cabin/hardwood/barn/plywood/chainlink): ambientCG, CC0 1.0.
+
+Ambience, creature, gore and melee impact recordings: Sonniss GDC 2026 Game Audio Bundle (royalty-free; contributors include Epic Stock Media, 344 Audio, SoundBits, InMotionAudio, David Dumais Audio, The Noisery, Jake Fielding). Trimmed, looped and converted.
+Horde drums and heartbeat: synthesized for this game.
+
+Vehicles (assets/vehicles): Kenney Car Kit, kenney.nl, CC0 1.0.
+
+Item icons: game-icons.net (https://game-icons.net) by Lorc, Delapouite, sbed, Skoll, lucasms, guard13007, John Colburn, rihlsul and contributors. Licensed CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Resized and tinted in-game.
