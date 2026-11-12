@@ -1,0 +1,17 @@
+# One statement per line so diffs, search/replace edits and small local models cope.
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: false
+BreakStringLiterals: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+PointerAlignment: Left
+FixNamespaceComments: false

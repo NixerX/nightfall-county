@@ -4,6 +4,8 @@ The game is one translation unit: `src/main.cpp` includes these files once, in n
 
 When working with a local model, give it only the file(s) named here for the job.
 
+Code style is set by `.clang-format` in the repo root (one statement per line). After editing, run `clang-format -i` on the files you touched so the style stays consistent.
+
 ## Foundation
 
 | File | Domain | What's in it |

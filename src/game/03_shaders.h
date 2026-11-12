@@ -136,4 +136,3 @@ void main(){
   col *= mix(vec3(0.92,0.98,1.06), vec3(1.05,1.0,0.92), smoothstep(0.1,0.7,lum)); // cool shadows, warm highlights
   finalColor = vec4(col, base.a);
 })";
-
