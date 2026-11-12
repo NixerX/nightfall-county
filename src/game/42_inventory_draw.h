@@ -18,9 +18,9 @@ static void drawInventory() {
         DrawRectangleRec(r, ok && hov ? rgba(40, 60, 40, 240) : ok ? rgba(26, 40, 28, 240) : rgba(20, 24, 30, 240)); DrawRectangleLinesEx(r, 1, rgba(54, 60, 70)); text(CSN[s], r.x + 4, r.y + 2, 10, rgba(110, 116, 126));
         if (P.eq[s]) { InvItem tmp; tmp.kind = 1; tmp.c = P.eq[s]; drawItemBox(tmp, {r.x + 3, r.y + 14, r.width - 6, r.height - 17}, hov); if (hov && !drag.on) { static InvItem hv; hv = tmp; hover = &hv; }
             if (hov && lp && !ctxMenu.on) { drag = {}; drag.on = true; drag.it = tmp; drag.from = 1; drag.slot = s; P.eq[s].reset(); } } }
-    float wy = dy + 72 + 5 * 62.f + 6; text("WEAPONS", dx + 14, wy, 12, STEEL);
+    float wy = dy + 72 + 5 * 62.f + 6; int hoverGun = -1; text("WEAPONS", dx + 14, wy, 12, STEEL);
     for (int i = 0; i < 3; i++) { Rectangle r = {dx + 14, wy + 18 + i * 40.f, dw - 28, 34}; bool hov = CheckCollisionPointRec(m, r); DrawRectangleRec(r, hov ? rgba(30, 36, 46) : rgba(20, 24, 30)); DrawRectangleLinesEx(r, 1, rgba(54, 60, 70));
-        if (i < 2) { text(i == 0 ? "PRIMARY" : "SIDEARM", r.x + 6, r.y + 2, 10, rgba(110, 116, 126)); if (P.hasGun[i]) { if (hov && !drag.on && !ctxMenu.on) gunTooltip(P.gun[i], m, i); text(P.gun[i].name, r.x + 6, r.y + 14, 13, RARC[P.gun[i].rar]); char b[48]; snprintf(b, 48, "%d/%d", P.gun[i].clip, P.gun[i].mag); text(b, r.x + r.width - 6, r.y + 14, 12, STEEL, 2);
+        if (i < 2) { text(i == 0 ? "PRIMARY" : "SIDEARM", r.x + 6, r.y + 2, 10, rgba(110, 116, 126)); if (P.hasGun[i]) { if (hov && !drag.on && !ctxMenu.on) hoverGun = i; text(P.gun[i].name, r.x + 6, r.y + 14, 13, RARC[P.gun[i].rar]); char b[48]; snprintf(b, 48, "%d/%d", P.gun[i].clip, P.gun[i].mag); text(b, r.x + r.width - 6, r.y + 14, 12, STEEL, 2);
                 if (hov && rp) { Loot o; o.kind = LK_GUN; o.id = P.gun[i].key; o.w = P.gun[i]; o.p = xz3(P.p, .05f); o.rot = frand(0, 6); loot.push_back(o); P.hasGun[i] = false; if (P.active == i) P.active = 2; msg("Dropped it.", STEEL); } } else text("-", r.x + 6, r.y + 14, 13, STEEL); }
         else { text("MELEE", r.x + 6, r.y + 2, 10, rgba(110, 116, 126)); text(MB[P.melee].n, r.x + 6, r.y + 14, 13, BONE); if (hov && rp && P.melee != MK_FISTS) { Loot o; o.kind = LK_MELEE; o.id = P.melee; o.p = xz3(P.p, .05f); o.rot = frand(0, 6); loot.push_back(o); P.melee = MK_FISTS; } } }
     text("Right-click a weapon to drop it", dx + 14, wy + 140, 11, rgba(110, 116, 126));
@@ -115,6 +115,7 @@ static void drawInventory() {
     else if (hover && !ctxMenu.on) { tooltip(*hover, m); if (lp && hover->kind == 0) {} }
     drawTabs(0);
     text("Drag to move   R rotate   Drop on a slot to wear   Drag a tool onto clothes to repair   Shift-click to drop   Right-click for options", W / 2.f, H - 16.f, 11, rgba(120, 126, 136), 1);
+    if (hoverGun >= 0 && P.hasGun[hoverGun]) gunTooltip(P.gun[hoverGun], m, hoverGun);
     if (hoverGun >= 0 && P.hasGun[hoverGun]) gunTooltip(P.gun[hoverGun], m, hoverGun);
     if (hoverGun >= 0 && P.hasGun[hoverGun]) gunTooltip(P.gun[hoverGun], m, hoverGun);
     drawCursor();
