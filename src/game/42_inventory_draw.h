@@ -115,5 +115,6 @@ static void drawInventory() {
     else if (hover && !ctxMenu.on) { tooltip(*hover, m); if (lp && hover->kind == 0) {} }
     drawTabs(0);
     text("Drag to move   R rotate   Drop on a slot to wear   Drag a tool onto clothes to repair   Shift-click to drop   Right-click for options", W / 2.f, H - 16.f, 11, rgba(120, 126, 136), 1);
+    if (hoverGun >= 0 && P.hasGun[hoverGun]) gunTooltip(P.gun[hoverGun], m, hoverGun);
     drawCursor();
 }
