@@ -66,6 +66,7 @@ static void drawSettings() {
     if ((d = row("Foliage density", q3[cfg.foliage], "Grass, bushes and tall grass. Applies to the next map (next life)."))) cfg.foliage = (cfg.foliage + d + 3) % 3;
     auto pct = [](float v) { return std::to_string((int)roundf(v * 100)) + "%"; };
     if ((d = row("Film grain", cfg.grain ? "On" : "Off", "Animated static over the screen. Off is cleaner and a little faster."))) cfg.grain ^= 1;
+    if ((d = row("Auto-equip guns", cfg.autoEquip ? "On" : "Off", "Switch to a gun as soon as you pick it up. Off keeps what you're holding."))) cfg.autoEquip ^= 1;
     if ((d = row("Master volume", pct(cfg.master), ""))) cfg.master = Clamp(cfg.master + d * .1f, 0, 1);
     if ((d = row("Effects volume", pct(cfg.sfx), "Guns, zombies, ambience"))) cfg.sfx = Clamp(cfg.sfx + d * .1f, 0, 1);
     if ((d = row("Music volume", pct(cfg.music), "Tension, horde drums, heartbeat"))) cfg.music = Clamp(cfg.music + d * .1f, 0, 1);
