@@ -160,11 +160,13 @@ static void genWorld() {
                     gblend(x, y, ((y / 3) % 2) ? fc : mulC(fc, .82f), .85f);
             curLayer = -1;
         }
-        int fh = makeBuilding(fx, fz, frand(8, 10), frand(7, 8), B_HOUSE, chance(.5f) ? 2 : 1, 1, -1, pick(HOUSE_WALL),
+        int fh = makeBuilding(fx, fz, frand(8, 12), frand(7, 10), B_HOUSE, chance(.55f) ? 2 : 1, 1, -1, pick(HOUSE_WALL),
                               pick(ROOF_C));
         if (chance(.6f))
             woodpile(V2(fx - 3, fz + 4), -1);
-        if (makeBuilding(fx + 16, fz - 4, 14, 20, B_BARN, 1, 2, -1, rgba(130, 50, 40), rgba(70, 64, 60)) >= 0 &&
+        Color barnC = pick(std::vector<Color>{rgba(130, 50, 40), rgba(130, 50, 40), rgba(150, 146, 136), rgba(118, 96, 74), rgba(200, 196, 186)});
+        float barnW = frand(12, 16), barnD = frand(16, 22);
+        if (makeBuilding(fx + 16, fz - 4, barnW, barnD, B_BARN, 1, 2, -1, barnC, rgba(70, 64, 60)) >= 0 &&
             chance(.7f))
             car(fx + 11, fz + 18, frand(0, 6), .05f, VK_TRACTOR);
         for (int k = 0; k < irand(0, 2); k++) {
@@ -201,7 +203,8 @@ static void genWorld() {
         curLayer = -1;
         if (chance(.5f)) {
             Vector2 p = Vector2Add(c, polar(frand(0, 2 * PI), R * .4f));
-            int cb = makeBuilding(p.x, p.y, 7, 6, B_CABIN, 1, irand(0, 3), -1, rgba(110, 82, 58), rgba(60, 54, 48));
+            Color cabC = pick(std::vector<Color>{rgba(110, 82, 58), rgba(92, 70, 52), rgba(128, 100, 72), rgba(84, 78, 70)});
+            int cb = makeBuilding(p.x, p.y, frand(6, 9), frand(5, 7), B_CABIN, chance(.25f) ? 2 : 1, irand(0, 3), -1, cabC, rgba(60, 54, 48));
             if (cb >= 0) {
                 woodpile(V2(p.x - 2.2f, p.y + 3), -1);
                 if (chance(.4f))
