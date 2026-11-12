@@ -275,6 +275,53 @@ static void genWorld() {
             k++;
         }
     }
+    // roadside homesteads: ranch houses, two-stories and weathered shacks, facing the road
+    for (int k = 0, tries = 0; k < (int)(14 * AREA) && tries < (int)(600 * AREA); tries++) {
+        Vector2 p = V2(frand(80, MAP - 80), frand(80, MAP - 80));
+        if (townAt(p, 1.4f) >= 0 || hotAt(p, 1.2f) >= 0)
+            continue;
+        float rd = roadDist(p);
+        if (rd < 12 || rd > 30)
+            continue;
+        Vector2 r = nearestRoadPt(p);
+        float dx = r.x - p.x, dz = r.y - p.y;
+        int side = fabsf(dx) > fabsf(dz) ? (dx < 0 ? 2 : 3) : (dz < 0 ? 0 : 1);
+        float roll = frand(0, 1);
+        int type, floors;
+        Color wall, roof;
+        if (roll < .45f) {
+            type = B_HOUSE;
+            float w = frand(10, 13), d = frand(7, 8.5f);
+            floors = 1;
+            wall = pick(HOUSE_WALL);
+            roof = pick(ROOF_C);
+        } else if (roll < .7f) {
+            type = B_HOUSE;
+            float w = frand(8, 10), d = frand(8, 9);
+            floors = 2;
+            wall = pick(HOUSE_WALL);
+            roof = pick(ROOF_C);
+        } else {
+            type = B_CABIN;
+            float w = frand(5.5f, 6.5f), d = frand(5, 5.5f);
+            floors = 1;
+            wall = pick(std::vector<Color>{rgba(120, 104, 84), rgba(96, 90, 82), rgba(140, 128, 106), rgba(110, 96, 80)});
+            roof = rgba(70, 64, 60);
+        }
+        int hb = makeBuilding(p.x - w / 2, p.y - d / 2, w, d, type, floors, side, -1, wall, roof);
+        if (hb < 0)
+            continue;
+        if (chance(.5f))
+            woodpile(V2(p.x - w / 2 - 1.5f, p.y + d / 2 - 1), -1);
+        if (chance(.35f))
+            makeBuilding(p.x + w / 2 + 3, p.y - d / 2, 3.2f, 3.4f, B_SHED, 1, side, -1, rgba(130, 110, 86), rgba(70, 64, 60));
+        if (chance(.3f))
+            car(p.x + w / 2 + 2, p.y + d / 2 + 3, frand(0, 6), .3f);
+        const Building& b = blds[hb];
+        track(b.doors.empty() ? p : b.doors[0].out, 1);
+        k++;
+    }
+
     // pine ridge sits in forest
     for (int k = 0; k < 500; k++) {
         Vector2 p = Vector2Add(TOWNS[3].c, polar(frand(0, 2 * PI), frand(TOWNS[3].r * 1.05f, TOWNS[3].r * 2.4f)));
