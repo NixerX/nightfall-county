@@ -166,7 +166,9 @@ static void pickUp() {
     if (l.kind == LK_CLOTH) { if (!takeCloth(l.c)) { msg("No room for that. Open the inventory (Tab) to swap.", rgba(255, 107, 91)); return; } loot.erase(loot.begin() + nearLoot); sfx(SFX_PICK); return; }
     loot.erase(loot.begin() + nearLoot);
     if (l.kind == LK_GUN) { int s = l.w.slot; if (P.hasGun[s]) { Loot o; o.kind = LK_GUN; o.id = P.gun[s].key; o.w = P.gun[s]; o.p = xz3(P.p, .05f); o.rot = frand(0, 6); loot.push_back(o); }
-        P.gun[s] = l.w; P.hasGun[s] = true; P.active = s; P.reload = 0; msg("Equipped " + l.w.name, RARC[l.w.rar]); if (l.w.rar == 3) sfx(SFX_LEGEND, 1, 0); else sfx(SFX_PICK); }
+        P.gun[s] = l.w; P.hasGun[s] = true;
+        if (cfg.autoEquip || P.active == s) { P.active = s; P.reload = 0; msg("Equipped " + l.w.name, RARC[l.w.rar]); } else { msg("Picked up " + l.w.name + " (slot " + std::to_string(s + 1) + ")", RARC[l.w.rar]); }
+        if (l.w.rar == 3) sfx(SFX_LEGEND, 1, 0); else sfx(SFX_PICK); }
     else { if (P.melee != MK_FISTS) { Loot o; o.kind = LK_MELEE; o.id = P.melee; o.p = xz3(P.p, .05f); o.rot = frand(0, 6); loot.push_back(o); } P.melee = l.id; msg("Equipped " + std::string(MB[l.id].n), BONE); sfx(SFX_PICK); }
 }
 static int outfitLook() {
