@@ -145,3 +145,7 @@ Blood, corpses and body parts stay on the map for the run. Limbs come off, heads
 ## Coming next
 
 Drivable, fixable vehicles (parts and fuel; jerry cans already turn up), real gunshot recordings, better trees, runners that vault fences.
+
+## Code layout
+
+`src/main.cpp` holds the includes and `main()`. The rest of the game lives in `src/game/NN_name.h`, one file per system (settings, buildings, loot, zombie AI, rendering, menus, and so on). They're not standalone headers: `main.cpp` includes them once, in number order, so it's still one translation unit and a file can use anything from a lower-numbered file. To change one system, open just that file. New code goes in the file for its system; a new system gets a new numbered file in the right spot in the include list.
