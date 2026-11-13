@@ -199,7 +199,7 @@ int main() {
                 state = ST_MAP;
             else if (IsKeyPressed(KEY_K))
                 state = ST_SKILLS;
-            else if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_ESCAPE) || !IsWindowFocused())
+            else if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_ESCAPE))
                 state = ST_PAUSE;
             else
                 update(dt);
