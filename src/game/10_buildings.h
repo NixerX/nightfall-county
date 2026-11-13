@@ -54,14 +54,23 @@ static int makeBuilding(float x0, float z0, float w, float d, int type, int floo
                 return true;
         return false;
     };
+    std::vector<Rectangle> gone; // furniture whose collision got cleared: its model has to go too
     for (auto& so : solids)
         if (so.bld == bi && so.kind == SK_FURN && hitK(so.x0, so.z0, so.x1, so.z1)) {
+            gone.push_back({so.x0, so.z0, so.x1 - so.x0, so.z1 - so.z0});
             so.x0 = so.x1 = so.z0 = so.z1 = -500;
         }
     props.erase(std::remove_if(props.begin() + p0, props.end(),
                                [&](const Prop& p) {
-                                   return p.bld == bi && p.layer == L_ALWAYS && p.p.y < 2.4f &&
-                                          hitK(p.p.x - .3f, p.p.z - .3f, p.p.x + .3f, p.p.z + .3f);
+                                   if (p.bld != bi || p.layer != L_ALWAYS || p.p.y >= 2.4f)
+                                       return false;
+                                   if (hitK(p.p.x - .3f, p.p.z - .3f, p.p.x + .3f, p.p.z + .3f))
+                                       return true;
+                                   for (auto& g : gone)
+                                       if (p.p.x > g.x && p.p.x < g.x + g.width && p.p.z > g.y &&
+                                           p.p.z < g.y + g.height)
+                                           return true;
+                                   return false;
                                }),
                 props.end());
     return bi;
