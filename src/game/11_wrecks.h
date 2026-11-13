@@ -116,6 +116,13 @@ static void serviceCar(int bi, int type) { // a matching vehicle out front of po
 static void addTree(Vector2 p, int kind) {
     if (!freeAt(p.x, p.y, 1.2f) || hotAt(p, .85f) >= 0)
         return;
+    for (int cx = gcl(p.x - 3); cx <= gcl(p.x + 3); cx++)
+        for (int cz = gcl(p.y - 3); cz <= gcl(p.y + 3); cz++)
+            for (int bi : bgrid[cx][cz]) { // never inside (or hard against) a building
+                const Building& b = blds[bi];
+                if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.z0 - 2 && p.y < b.z1 + 2)
+                    return;
+            }
     Tree t;
     t.p = p;
     t.kind = kind;
