@@ -308,7 +308,7 @@ static void updatePlayer(float dt) {
     // survival
     float burn = (P.sprint ? 2.2f : 1) * P.perks.metab;
     P.food = std::max(0.f, P.food - .055f * burn * dt);
-    P.water = std::max(0.f, P.water - .085f * burn * (P.sick > 0 ? 1.8f : 1) * dt);
+    P.water = std::max(0.f, P.water - .085f * burn * (P.sick > 0 ? 1.3f : 1) * dt);
     int bi = buildingAt(P.p);
     bool inside = bi >= 0;
     float fireNear = 0;
@@ -339,9 +339,11 @@ static void updatePlayer(float dt) {
             decal(Vector2Add(P.p, V2(frand(-.2f, .2f), frand(-.2f, .2f))), frand(.06f, .14f), BLOOD_DRY);
         }
     }
-    if (P.sick > 0) {
-        P.hp -= .12f * dt;
+    if (P.sick > 0) { // first in-game day: stamina cap sinks to 50%. after that: fever, slow health drain
         P.sick += dt;
+        P.sta = std::min(P.sta, 100.f - 50.f * std::min(1.f, P.sick / CYCLE));
+        if (P.sick > CYCLE)
+            P.hp -= .05f * dt;
     }
     if (P.food <= 0)
         P.hp -= .35f * dt;

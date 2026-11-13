@@ -212,7 +212,7 @@ static void drawHUD() {
     if (P.bleeds)
         status("BLEEDING x" + std::to_string(P.bleeds), BLOODC);
     if (P.sick > 0)
-        status("SICK", rgba(170, 200, 90));
+        status(P.sick > CYCLE ? "FEVER" : "SICK", rgba(170, 200, 90));
     if (P.temp < 35.5f)
         status("COLD", COLDC);
     if (P.broken)
