@@ -399,10 +399,10 @@ static void updatePlayer(float dt) {
         float ly = P.loft >= 0 ? lofts[P.loft].y : 0;
         for (int i = 0; i < (int)loot.size(); i++) {
             Loot& l = loot[i];
-            if (!l.settled || fabsf(l.p.y - ly) > 1.6f || wallBetween(P.p, V2(l.p.x, l.p.z)))
+            if (!l.settled || fabsf(l.p.y - ly) > 1.6f)
                 continue;
             float d = Vector2Distance(V2(l.p.x, l.p.z), P.p);
-            if (d < nd) {
+            if (d < nd && !wallBetween(P.p, V2(l.p.x, l.p.z))) { // wall check last: it's the slow one
                 nd = d;
                 nearLoot = i;
             }

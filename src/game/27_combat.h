@@ -19,6 +19,8 @@ static void gainXP(float v) {
 static void noiseAt(Vector2 p, float r) {
     int pb = buildingAt(p);
     for (auto& z : zombies) {
+        if (Vector2DistanceSqr(z.p, p) >= r * r)
+            continue; // out of range anyway: skip the building lookup
         float rr = buildingAt(z.p) != pb ? r * .4f : r; // walls muffle: inside vs outside hears 40% as far
         if (Vector2DistanceSqr(z.p, p) < rr * rr && z.aggro <= 0 && z.ignoreT <= 0 && z.pound < 0) {
             z.np = Vector2Add(p, V2(frand(-4, 4), frand(-4, 4)));
