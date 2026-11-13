@@ -62,7 +62,7 @@ static Act findAct() {
             if (c.searched)
                 continue;
             float dd = Vector2Distance(c.p, P.p);
-            if (dd < 3.f && dd < best) {
+            if (dd < 4.f && dd < best) { // car search reach (from centre)
                 best = dd;
                 a = {A_CAR, i};
             }
