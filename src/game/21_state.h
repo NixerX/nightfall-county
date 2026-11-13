@@ -23,6 +23,11 @@ struct Horde {
     int left = 0;
     Vector2 end{}, lastSeen{};
 } horde;
+struct CarAlarm { // a searched car went off
+    bool on = false;
+    float t = 0, beat = 0;
+    Vector2 p{};
+} alarm;
 struct Fire {
     Vector2 p;
     float fuel, smokeT = 0, lureT = 0;
