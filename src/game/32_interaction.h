@@ -169,7 +169,17 @@ static void startCarAlarm(Vector2 cp) { // the search set off the alarm: a crowd
             type = Z_BLOATER;
         else if (chance(isNight() ? .25f : .12f))
             type = Z_RUNNER;
-        spawnAround(type, 30, 45, a, .6f);
+        for (int k = 0; k < 40; k++) { // spawn where you can't see it: off-screen or behind a building
+            Vector2 sp = Vector2Add(P.p, polar(a + frand(-.7f, .7f), frand(30, 70)));
+            Vector2 s = GetWorldToScreen(xz3(sp, 1), cam3);
+            bool offScreen = s.x < -60 || s.x > W + 60 || s.y < -60 || s.y > H + 60;
+            if (!freeAt(sp.x, sp.y, .6f) || !(offScreen || !losClear(P.p, sp)))
+                continue;
+            Zombie& z = spawnZ(type, sp);
+            z.np = cp; // head for the car, even from out past the noise radius
+            z.noiseT = 15;
+            break;
+        }
     }
     noiseAt(cp, 50);
 }
