@@ -181,6 +181,10 @@ static void melee() {
         return;
     P.sta -= m.sta;
     P.staD = .6f;
+    if (alarm.on && Vector2Distance(P.p, alarm.p) < 3.5f) {
+        alarm.on = false;
+        msg("You smash the alarm quiet.", BONE);
+    }
     P.swing = .22f;
     P.swingCd = m.rate;
     P.swingA = P.a;
