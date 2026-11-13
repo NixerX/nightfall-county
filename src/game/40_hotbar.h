@@ -300,7 +300,7 @@ static void drawHUD() {
     // loot labels & prompt
     for (int i = 0; i < (int)loot.size(); i++) {
         const Loot& l = loot[i];
-        if (Vector2Distance(V2(l.p.x, l.p.z), P.p) > 7)
+        if (Vector2Distance(V2(l.p.x, l.p.z), P.p) > 7 || lootHidden(l))
             continue;
         Vector2 s = GetWorldToScreen(Vector3Add(l.p, V3(0, .4f, 0)), cam3);
         std::string nm = l.kind == LK_GUN     ? l.w.name

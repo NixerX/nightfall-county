@@ -69,13 +69,14 @@ static Weapon rGun(std::istream& in) {
     in >> std::quoted(w.name);
     return w;
 }
+constexpr int SAVE_VER = 2; // bump when world generation changes (old saves would load onto a different map)
 static void saveGame() {
     std::ofstream o(runSavePath());
     if (!o) {
         msg("Couldn't write the save file.", BLOODC);
         return;
     }
-    o << "NFSAVE 1\n" << worldSeed << ' ' << cfg.foliage << ' ' << cfg.diff << '\n';
+    o << "NFSAVE " << SAVE_VER << "\n" << worldSeed << ' ' << cfg.foliage << ' ' << cfg.diff << '\n';
     o << gTime << ' ' << nights << ' ' << kills << ' ' << hordeDay << ' ' << playerFemale << ' ' << gibCount << '\n';
     o << P.p.x << ' ' << P.p.y << ' ' << P.a << ' ' << P.hp << ' ' << P.food << ' ' << P.water << ' ' << P.temp << ' '
       << P.sta << ' ' << P.bleeds << ' ' << P.sick << ' ' << P.pain << ' ' << P.broken << ' ' << P.splinted << ' '
@@ -128,7 +129,7 @@ static bool loadGame() {
     std::ifstream in(runSavePath());
     std::string tag;
     int ver;
-    if (!(in >> tag >> ver) || tag != "NFSAVE")
+    if (!(in >> tag >> ver) || tag != "NFSAVE" || ver != SAVE_VER)
         return false;
     unsigned seed;
     int fol, diff;

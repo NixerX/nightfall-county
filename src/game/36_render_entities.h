@@ -205,6 +205,12 @@ static void setupLighting(Vector3 viewPos) {
         setU(uLCol, lc, SHADER_UNIFORM_VEC3, n);
     }
 }
+constexpr float LOOT_PEEK = 3.f; // from outside a building you only see its loot this close (through a doorway)
+static bool lootHidden(const Loot& l) {
+    Vector2 lp = V2(l.p.x, l.p.z);
+    int lb = buildingAt(lp);
+    return lb >= 0 && lb != buildingAt(P.p) && Vector2Distance(lp, P.p) > LOOT_PEEK;
+}
 static void computeFades(float dt) {
     Vector3 cp = cam3.position;
     Vector3 head = xz3(P.p, 1.4f);

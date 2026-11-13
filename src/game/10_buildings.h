@@ -60,6 +60,15 @@ static int makeBuilding(float x0, float z0, float w, float d, int type, int floo
             gone.push_back({so.x0, so.z0, so.x1 - so.x0, so.z1 - so.z0});
             so.x0 = so.x1 = so.z0 = so.z1 = -500;
         }
+    auto& sp = blds[bi].spots;
+    sp.erase(std::remove_if(sp.begin(), sp.end(),
+                            [&](const LootSpot& s) {
+                                for (auto& g : gone)
+                                    if (s.p.x > g.x && s.p.x < g.x + g.width && s.p.z > g.y && s.p.z < g.y + g.height)
+                                        return true;
+                                return false;
+                            }),
+             sp.end());
     props.erase(std::remove_if(props.begin() + p0, props.end(),
                                [&](const Prop& p) {
                                    if (p.bld != bi || p.layer != L_ALWAYS || p.p.y >= 2.4f)

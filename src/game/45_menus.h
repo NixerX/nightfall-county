@@ -47,6 +47,7 @@ static void drawTitle() {
             if (!loadGame()) {
                 deleteSave();
                 newGame();
+                msg("That save was from an older version of the map. Starting a new life.", STEEL);
             }
         }
         y += 60;

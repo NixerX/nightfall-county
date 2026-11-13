@@ -184,7 +184,7 @@ static void renderWorld3D() {
             }
     // loot
     for (auto& l : loot) {
-        if (!vis(l.p.x, l.p.z, 2))
+        if (!vis(l.p.x, l.p.z, 2) || lootHidden(l))
             continue;
         {
             int ai = -1;
@@ -620,7 +620,7 @@ player_done:;
             billboard(xz3(hp, hy), .4f, rgba(255, 60, 30, 70));
     }
     for (auto& l : loot)
-        if (l.kind == LK_GUN && l.w.rar >= 2 && vis(l.p.x, l.p.z, 2)) {
+        if (l.kind == LK_GUN && l.w.rar >= 2 && vis(l.p.x, l.p.z, 2) && !lootHidden(l)) {
             Color rc = RARC[l.w.rar];
             for (int k = 0; k < 6; k++)
                 billboard(Vector3Add(l.p, V3(0, .3f + k * .45f, 0)), .28f - k * .03f, withA(rc, .35f - k * .05f));

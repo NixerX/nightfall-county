@@ -130,7 +130,8 @@ static void genHotZones() {
         case HZ_MEDEVAC: {
             float yaw = frand(0, 2 * PI);
             Vector2 f = polar(yaw, 1);
-            if (boxFree(c.x - 6, c.y - 6, c.x + 6, c.y + 6)) {
+            bool heli = boxFree(c.x - 6, c.y - 6, c.x + 6, c.y + 6);
+            if (heli) {
                 addProp(M_CUBE, V3(c.x, 1.3f, c.y), V3(9, 2.4f, 2.8f), yaw, rgba(66, 72, 64));
                 addProp(M_CUBE, V3(c.x - f.x * 7, 1.6f, c.y - f.y * 7), V3(6, .7f, .7f), yaw, rgba(60, 64, 58));
                 addProp(M_CUBE, V3(c.x + f.x * 1, 2.7f, c.y + f.y * 1), V3(11, .1f, .3f), yaw + .7f, rgba(40, 40, 40));
@@ -148,7 +149,8 @@ static void genHotZones() {
                 Vector2 ap = rp(.8f);
                 car(ap.x, ap.y, frand(0, 6), .3f, VK_AMBULANCE);
             }
-            lootSpot(Vector2Add(c, Vector2Scale(f, 5.5f)), .1f, LT_MED);
+            if (heli)
+                lootSpot(Vector2Add(c, Vector2Scale(f, 5.5f)), .1f, LT_MED);
             break;
         }
         case HZ_CONVOY: {
