@@ -58,6 +58,17 @@ static void updateBullets(float dt) {
 }
 static void updateWorld(float dt) {
     const float G = 18;
+    if (alarm.on) {
+        alarm.t -= dt;
+        alarm.beat -= dt;
+        if (alarm.beat <= 0) {
+            alarm.beat = 1.2f;
+            sfxAt(SFX_CAR_ALARM, alarm.p, 1, 0);
+            noiseAt(alarm.p, 40);
+        }
+        if (alarm.t <= 0)
+            alarm.on = false;
+    }
     for (int i = (int)bombs.size() - 1; i >= 0; i--) {
         Bomb& b = bombs[i];
         b.v.y -= G * dt;
