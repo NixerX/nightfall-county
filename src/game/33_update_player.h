@@ -210,7 +210,7 @@ static void updatePlayer(float dt) {
                    (P.reload > 0 ? .8f : 1) * legFactor() * dirK * (P.food <= 0 || P.water <= 0 ? .8f : 1) *
                    P.perks.speed;
         if (P.sprint) {
-            P.sta -= 16 * P.perks.sta * dt;
+            P.sta -= 16 * STA_K * P.perks.sta * dt;
             P.staD = .8f;
         }
         Vector2 tv = Vector2Scale(in, sp);

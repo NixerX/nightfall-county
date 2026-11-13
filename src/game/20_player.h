@@ -1,6 +1,7 @@
 // Nightfall County: player.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+constexpr float STA_K = .7f; // stamina cost multiplier: sprint, swings, dodge, kick, shove, vault, block
 // ============================================================ player
 struct Perks {
     float dmg = 1, rate = 1, crit = .06f, metab = 1, sta = 1, luck = 1, blast = 1, cold = 1, melee = 1, noise = 1,

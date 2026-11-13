@@ -28,7 +28,7 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
         return;
     if (P.blocking && srcType >= 0 && srcType < 99 &&
         fabsf(angDiff(atan2f(src.y - P.p.y, src.x - P.p.x), P.a)) < 1.2f) { // blocked from the front
-        float cost = P.shieldHP > 0 ? 5.f : 11.f;
+        float cost = (P.shieldHP > 0 ? 5.f : 11.f) * STA_K;
         if (P.sta >= cost) {
             P.sta -= cost;
             P.staD = .7f;

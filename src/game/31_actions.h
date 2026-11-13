@@ -62,7 +62,7 @@ static void dodge() {
         return;
     if (P.roll > 0 || P.rollCd > 0 || P.broken)
         return;
-    float cost = 25;
+    float cost = 25 * STA_K;
     if (P.sta < cost)
         return;
     P.sta -= cost;
@@ -80,7 +80,7 @@ static void dodge() {
 static void shove() { // quick two-handed push for the one that's in your face
     if (P.shoveCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 6)
         return;
-    P.sta -= 6;
+    P.sta -= 6 * STA_K;
     P.staD = .4f;
     P.shoveCd = .4f;
     P.kickT = 0;
@@ -122,9 +122,9 @@ static bool tryVault() { // Space into a low obstacle (fence, crate, car, rock, 
     for (float t = tObs + .3f; t < tObs + 3.5f; t += .15f) {
         Vector2 q = Vector2Add(P.p, Vector2Scale(dir, t));
         if (freeAt(q.x, q.y, .36f)) {
-            if (P.sta < 10)
+            if (P.sta < 10 * STA_K)
                 return true;
-            P.sta -= 10;
+            P.sta -= 10 * STA_K;
             P.staD = .6f;
             P.vaultA = P.p;
             P.vaultB = q;
@@ -141,9 +141,9 @@ static bool tryVault() { // Space into a low obstacle (fence, crate, car, rock, 
     return false;
 }
 static void kick() {
-    if (P.kickCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 14 || P.broken)
+    if (P.kickCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 14 * STA_K || P.broken)
         return;
-    P.sta -= 14;
+    P.sta -= 14 * STA_K;
     P.staD = .6f;
     P.kickCd = .75f;
     P.kickT = .35f;
@@ -177,9 +177,9 @@ static void kick() {
 }
 static void melee() {
     const MBase& m = MB[P.melee];
-    if (P.swingCd > 0 || P.roll > 0 || P.sta < m.sta || P.blocking)
+    if (P.swingCd > 0 || P.roll > 0 || P.sta < m.sta * STA_K || P.blocking)
         return;
-    P.sta -= m.sta;
+    P.sta -= m.sta * STA_K;
     P.staD = .6f;
     if (alarm.on && Vector2Distance(P.p, alarm.p) < 3.5f) {
         alarm.on = false;
