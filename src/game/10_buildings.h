@@ -69,6 +69,14 @@ static int makeBuilding(float x0, float z0, float w, float d, int type, int floo
                                 return false;
                             }),
              sp.end());
+    size_t pEnd = props.size();
+    float gx0 = 1e9f, gz0 = 1e9f, gx1 = -1e9f, gz1 = -1e9f; // grid area this building's props sit in
+    for (size_t i = p0; i < pEnd; i++) {
+        gx0 = std::min(gx0, props[i].p.x);
+        gz0 = std::min(gz0, props[i].p.z);
+        gx1 = std::max(gx1, props[i].p.x);
+        gz1 = std::max(gz1, props[i].p.z);
+    }
     props.erase(std::remove_if(props.begin() + p0, props.end(),
                                [&](const Prop& p) {
                                    if (p.bld != bi || p.layer != L_ALWAYS || p.p.y >= 2.4f)
@@ -82,6 +90,19 @@ static int makeBuilding(float x0, float z0, float w, float d, int type, int floo
                                    return false;
                                }),
                 props.end());
+    if (props.size() != pEnd && pEnd > p0) { // erasing shifted indices: re-file this building's props in the grid,
+        for (int cx = gcl(gx0); cx <= gcl(gx1); cx++) // or stale entries draw other props twice (flicker)
+            for (int cz = gcl(gz0); cz <= gcl(gz1); cz++) {
+                auto& v = pgrid[cx][cz];
+                v.erase(std::remove_if(v.begin(), v.end(),
+                                       [&](int i) {
+                                           return i >= (int)p0;
+                                       }),
+                        v.end());
+            }
+        for (size_t i = p0; i < props.size(); i++)
+            pgrid[gcl(props[i].p.x)][gcl(props[i].p.z)].push_back((int)i);
+    }
     return bi;
 }
 static int makeBuildingRaw(float x0, float z0, float w, float d, int type, int floors, int doorSide, int town,
