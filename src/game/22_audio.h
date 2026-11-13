@@ -338,6 +338,12 @@ static void buildAudio() {
         nb += (int)b.size() / 2;
     TraceLog(LOG_INFO, "NIGHTFALL: %d recorded sound samples", nb);
 }
+struct CarAlarm {
+    bool on = false;
+    float t = 0, beat = 0;
+    Vector2 p{};
+};
+static CarAlarm alarm;
 static void sfx(int id, float vol = 1, float pv = .08f) {
     if (!audioOk || muted)
         return;
