@@ -18,7 +18,7 @@ static Zombie& spawnZ(int type, Vector2 p) {
     z.type = type;
     z.p = p;
     z.r = t.r;
-    z.hp = z.mhp = t.hp * s * scaleK();
+    z.hp = z.mhp = t.hp * s * (type == Z_BRUTE ? diffK() : scaleK()); // brutes skip level scaling
     z.spd = t.spd * frand(.85f, 1.15f) * (cfg.diff >= 2 ? 1.08f : cfg.diff == 0 ? .92f : 1);
     z.dmg = t.dmg * (1 + .06f * (dayN() - 1)) * (.6f + .4f * scaleK());
     z.seed = frand(0, 10);
