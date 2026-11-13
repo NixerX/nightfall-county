@@ -76,7 +76,6 @@ static void updatePlayer(float dt) {
             cm = 0;
         if (alt) // hold position: stop click-walking or chasing
             cm = 0;
-        if (alt) cm = 0; // hold position: stop click-walking or chasing
         bool gun = P.active < 2 && P.hasGun[P.active];
         cmFire = ld && (alt || (gun && onZ >= 0) || (gun && cm == 2));
         if (cm == 2) {
