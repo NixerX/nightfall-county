@@ -289,21 +289,25 @@ static void genWorld() {
         float roll = frand(0, 1);
         int type, floors;
         Color wall, roof;
+        float w, d;
         if (roll < .45f) {
             type = B_HOUSE;
-            float w = frand(10, 13), d = frand(7, 8.5f);
+            w = frand(10, 13);
+            d = frand(7, 8.5f);
             floors = 1;
             wall = pick(HOUSE_WALL);
             roof = pick(ROOF_C);
         } else if (roll < .7f) {
             type = B_HOUSE;
-            float w = frand(8, 10), d = frand(8, 9);
+            w = frand(8, 10);
+            d = frand(8, 9);
             floors = 2;
             wall = pick(HOUSE_WALL);
             roof = pick(ROOF_C);
         } else {
             type = B_CABIN;
-            float w = frand(5.5f, 6.5f), d = frand(5, 5.5f);
+            w = frand(5.5f, 6.5f);
+            d = frand(5, 5.5f);
             floors = 1;
             wall = pick(std::vector<Color>{rgba(120, 104, 84), rgba(96, 90, 82), rgba(140, 128, 106), rgba(110, 96, 80)});
             roof = rgba(70, 64, 60);
