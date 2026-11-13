@@ -35,7 +35,7 @@ static void updatePlayer(float dt) {
     bool cmSwing = false, cmFire = false, cmPick = false;
     if (cfg.controls == 2 && state == ST_PLAY && !uiOpen && P.loft < 0) {
         bool lp = IsMouseButtonPressed(MOUSE_BUTTON_LEFT), ld = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
-             alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT);
+             alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT) || IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
         Vector2 gp = ap;
         int onZ = -1;
         float bz = 1.1f;
@@ -74,6 +74,7 @@ static void updatePlayer(float dt) {
             cmPt = gp; // hold to keep walking toward the cursor
         if (il > 0)
             cm = 0;
+        if (alt) cm = 0; // hold position: stop click-walking or chasing
         bool gun = P.active < 2 && P.hasGun[P.active];
         cmFire = ld && (alt || (gun && onZ >= 0) || (gun && cm == 2));
         if (cm == 2) {
