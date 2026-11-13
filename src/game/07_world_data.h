@@ -297,6 +297,19 @@ static bool losClear(Vector2 a, Vector2 b) {
     }
     return true;
 }
+static bool wallBetween(Vector2 a, Vector2 b) { // a wall or closed door in the way (also works upstairs/basements)
+    float d = Vector2Distance(a, b);
+    int n = (int)(d / .1f) + 1;
+    for (int i = 1; i < n; i++) {
+        Vector2 p = Vector2Lerp(a, b, (float)i / n);
+        for (int si : sgrid[gcl(p.x)][gcl(p.y)]) {
+            const Solid& s = solids[si];
+            if (s.kind == SK_WALL && solidOn(s) && p.x >= s.x0 && p.x <= s.x1 && p.y >= s.z0 && p.y <= s.z1)
+                return true;
+        }
+    }
+    return false;
+}
 static int buildingAt(Vector2 p) {
     if (p.x < 0 || p.y < 0 || p.x >= WORLDX || p.y >= MAP)
         return -1;

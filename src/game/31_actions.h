@@ -89,7 +89,7 @@ static void shove() { // quick two-handed push for the one that's in your face
         if (z.dead)
             continue;
         float d = Vector2Distance(z.p, P.p), a = atan2f(z.p.y - P.p.y, z.p.x - P.p.x);
-        if (d < 1.4f + z.r && fabsf(angDiff(a, P.a)) < 1.1f) {
+        if (d < 1.4f + z.r && fabsf(angDiff(a, P.a)) < 1.1f && !wallBetween(P.p, z.p)) {
             z.k = Vector2Add(z.k, polar(a, (z.type == Z_BRUTE ? 1.5f : 5.5f) * P.perks.kick));
             z.stun = std::max(z.stun, z.type == Z_BRUTE ? .1f : .5f);
             z.atk = std::max(z.atk, .5f);
@@ -152,7 +152,7 @@ static void kick() {
         if (z.dead)
             continue;
         float d = Vector2Distance(z.p, P.p), a = atan2f(z.p.y - P.p.y, z.p.x - P.p.x);
-        if (d < 1.7f + z.r && fabsf(angDiff(a, P.a)) < .95f) {
+        if (d < 1.7f + z.r && fabsf(angDiff(a, P.a)) < .95f && !wallBetween(P.p, z.p)) {
             float kb = (z.type == Z_BRUTE ? 2.5f : 8.f) * P.perks.kick;
             hurtZ(z, 9 * P.perks.kick * P.perks.melee, false, a, false);
             z.k = Vector2Add(z.k, polar(a, kb));
@@ -194,7 +194,8 @@ static void melee() {
         if (z.dead)
             continue;
         float d = Vector2Distance(z.p, P.p), a = atan2f(z.p.y - P.p.y, z.p.x - P.p.x);
-        if (d < m.range + z.r && (fabsf(angDiff(a, P.a)) < m.arc || d < z.r + .75f)) { /* point-blank always connects */
+        if (d < m.range + z.r && (fabsf(angDiff(a, P.a)) < m.arc || d < z.r + .75f) &&
+            !wallBetween(P.p, z.p)) { /* point-blank always connects */
             bool rage = P.actT > 0 && P.cls == 4;
             bool hd = chance(P.perks.crit + .08f);
             hurtZ(z, m.dmg * P.perks.melee * P.perks.dmg * (rage ? 2 : 1), hd, a, false, m.dism + (rage ? .2f : 0));

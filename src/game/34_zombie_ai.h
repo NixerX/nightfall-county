@@ -312,7 +312,7 @@ static void updateZombies(float dt) {
                 if (chance(dt * 30))
                     parts.push_back({xz3(z.p, .1f), V3(frand(-1, 1), .5f, frand(-1, 1)), .6f, .6f, .4f,
                                      rgba(90, 80, 70, 150), P_DUST});
-                if (d < z.r + .5f) {
+                if (d < z.r + .5f && !wallBetween(z.p, P.p)) {
                     hitPlayer(z.dmg * 1.3f, z.p, Z_BRUTE);
                     z.chgT = 0;
                 }
@@ -376,7 +376,7 @@ static void updateZombies(float dt) {
             collide(z.p, z.r);
             continue;
         }
-        if (d < z.r + .35f + .35f && P.roll <= 0 && P.loft < 0) {
+        if (d < z.r + .35f + .35f && P.roll <= 0 && P.loft < 0 && !wallBetween(z.p, P.p)) {
             z.atk -= dt;
             if (z.atk <= 0) {
                 z.atk = z.type == Z_VOLATILE ? .6f : .95f;

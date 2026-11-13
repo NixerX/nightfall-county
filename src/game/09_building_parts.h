@@ -54,7 +54,8 @@ static void wallSeg(float ax, float az, float bx, float bz, float H, Color c, in
     if (len < .05f)
         return;
     float cx = (ax + bx) / 2, cz = (az + bz) / 2;
-    addProp(M_CUBE, V3(cx, H / 2, cz), horiz ? V3(len + t, H, t) : V3(t, H, len + t), 0, c, bi, L_WALL, curWallTex);
+    float vl = len + (exterior ? t : 0); // interior walls end inside the outer wall, not flush with its outside face
+    addProp(M_CUBE, V3(cx, H / 2, cz), horiz ? V3(vl, H, t) : V3(t, H, vl), 0, c, bi, L_WALL, curWallTex);
     if (horiz)
         addSolid(std::min(ax, bx) - t / 2, az - t / 2, std::max(ax, bx) + t / 2, az + t / 2, H, SK_WALL, bi);
     else

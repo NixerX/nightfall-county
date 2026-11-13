@@ -35,7 +35,8 @@ static void updatePlayer(float dt) {
     bool cmSwing = false, cmFire = false, cmPick = false;
     if (cfg.controls == 2 && state == ST_PLAY && !uiOpen && P.loft < 0) {
         bool lp = IsMouseButtonPressed(MOUSE_BUTTON_LEFT), ld = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
-             alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT) || IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+             alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT) || IsKeyDown(KEY_LEFT_CONTROL) ||
+                   IsKeyDown(KEY_RIGHT_CONTROL);
         Vector2 gp = ap;
         int onZ = -1;
         float bz = 1.1f;
@@ -398,7 +399,7 @@ static void updatePlayer(float dt) {
         float ly = P.loft >= 0 ? lofts[P.loft].y : 0;
         for (int i = 0; i < (int)loot.size(); i++) {
             Loot& l = loot[i];
-            if (!l.settled || fabsf(l.p.y - ly) > 1.6f)
+            if (!l.settled || fabsf(l.p.y - ly) > 1.6f || wallBetween(P.p, V2(l.p.x, l.p.z)))
                 continue;
             float d = Vector2Distance(V2(l.p.x, l.p.z), P.p);
             if (d < nd) {

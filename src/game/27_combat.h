@@ -17,11 +17,14 @@ static void gainXP(float v) {
     }
 }
 static void noiseAt(Vector2 p, float r) {
-    for (auto& z : zombies)
-        if (Vector2DistanceSqr(z.p, p) < r * r && z.aggro <= 0 && z.ignoreT <= 0 && z.pound < 0) {
+    int pb = buildingAt(p);
+    for (auto& z : zombies) {
+        float rr = buildingAt(z.p) != pb ? r * .4f : r; // walls muffle: inside vs outside hears 40% as far
+        if (Vector2DistanceSqr(z.p, p) < rr * rr && z.aggro <= 0 && z.ignoreT <= 0 && z.pound < 0) {
             z.np = Vector2Add(p, V2(frand(-4, 4), frand(-4, 4)));
             z.noiseT = 12;
         }
+    }
 }
 static void hitPlayer(float dmg, Vector2 src, int srcType) {
     if (P.iframe > 0 || state != ST_PLAY)
