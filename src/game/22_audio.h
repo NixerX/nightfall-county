@@ -344,6 +344,28 @@ struct CarAlarm {
     Vector2 p{};
 };
 static CarAlarm alarm;
+static void startCarAlarm(Vector2 cp) {
+    alarm.on = true;
+    alarm.t = 10;
+    alarm.beat = 0;
+    alarm.p = cp;
+    msg("Car alarm! Get moving.", rgba(255, 107, 91));
+    int n = std::min(22, irand(12, 16) + dayN());
+    float a = frand(0, 2 * PI);
+    for (int i = 0; i < n; i++) {
+        int type;
+        if (dayN() >= 2 && chance(.05f))
+            type = Z_BLOATER;
+        else if (isNight() && chance(.25f))
+            type = Z_RUNNER;
+        else if (!isNight() && chance(.12f))
+            type = Z_RUNNER;
+        else
+            type = Z_WALKER;
+        spawnAround(type, 30, 45, a, .6f);
+    }
+    noiseAt(cp, 50);
+}
 static void sfx(int id, float vol = 1, float pv = .08f) {
     if (!audioOk || muted)
         return;
