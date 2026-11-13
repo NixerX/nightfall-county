@@ -229,7 +229,7 @@ static void drawSettings() {
         static const char* CH[3] = {
             "W/A/S/D are fixed compass directions; two keys for diagonals.",
             "W walks toward the cursor, S backs off, A/D circle around it.",
-            "Diablo style: click to walk, click a zombie to attack it, click loot to grab it. Alt+click attacks in place."};
+            "Diablo style: click to walk, click a zombie to attack it, click loot to grab it. Hold Ctrl (or Alt) to stand still and attack where you click."};
         if ((d = row("Controls", CN[cfg.controls], CH[cfg.controls])))
             cfg.controls = (cfg.controls + d + 3) % 3;
     }
