@@ -370,7 +370,7 @@ static int makeBuildingRaw(float x0, float z0, float w, float d, int type, int f
                         furnA(bi, "interior/Kitchen_Sink", r.x0 + 3.2f, r.z0, 0, -1);
                     if (rd > 3.2f) {
                         furnA(bi, "interior/Table_RoundSmall", r.x0 + rw * .55f, r.z1 - 1.2f, 0, LT_KITCHEN);
-                        furnA(bi, "interior/Chair_1", r.x0 + rw * .55f - .75f, r.z1 - 1.2f, 3, -1, .5f, false);
+                        furnA(bi, "interior/Chair_1", r.x0 + rw * .55f - 1.f, r.z1 - 1.2f, 3, -1, .5f, false);
                     }
                     break;
                 case 2:
@@ -410,8 +410,8 @@ static int makeBuildingRaw(float x0, float z0, float w, float d, int type, int f
         {
             Vector2 t = V2(x0 + w * .35f, z0 + d * .55f);
             furnA(bi, "interior/Table_RoundSmall", t.x, t.y, 0, LT_HOUSE);
-            furnA(bi, "interior/Chair_1", t.x - .75f, t.y, 3, -1, .5f, false);
-            furnA(bi, "interior/Chair_1", t.x + .75f, t.y, 1, -1, .5f, false);
+            furnA(bi, "interior/Chair_1", t.x - 1.f, t.y, 3, -1, .5f, false); // clear of the tabletop
+            furnA(bi, "interior/Chair_1", t.x + 1.f, t.y, 1, -1, .5f, false);
         }
         furnA(bi, chance(.5f) ? "interior/Bookshelf" : "interior/Drawer_1", x1 - .3f, z0 + 1.2f, 1, LT_HOUSE);
         if (chance(.6f))

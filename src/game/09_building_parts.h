@@ -68,6 +68,12 @@ static void wallSeg(float ax, float az, float bx, float bz, float H, Color c, in
             static const float bp[3] = {.02f, .18f, .55f}, brk[3] = {0, .15f, .3f};
             bool board = chance(bp[curCond]), broken = !board && chance(brk[curCond]);
             Color wc = board ? rgba(110, 86, 60) : broken ? rgba(12, 12, 14) : rgba(58, 74, 92);
+            if (!board) { // see-through (zombies can spot you through it), still a wall for everything else
+                if (horiz)
+                    addSolid(wx - .55f, az - t / 2 - .01f, wx + .55f, az + t / 2 + .01f, 0, SK_WINDOW, bi);
+                else
+                    addSolid(ax - t / 2 - .01f, wz - .55f, ax + t / 2 + .01f, wz + .55f, 0, SK_WINDOW, bi);
+            }
             Vector3 p = horiz ? V3(wx, 1.75f, wz + outN * (t / 2 + .02f)) : V3(wx + outN * (t / 2 + .02f), 1.75f, wz);
             Vector3 fr = horiz ? V3(wx, 1.75f, wz + outN * (t / 2 + .01f)) : V3(wx + outN * (t / 2 + .01f), 1.75f, wz);
             addProp(M_CUBE, fr, horiz ? V3(1.26f, 1.16f, .04f) : V3(.04f, 1.16f, 1.26f), 0, rgba(214, 210, 200), bi,

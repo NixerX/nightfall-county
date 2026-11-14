@@ -17,7 +17,8 @@ enum SolidKind {
     SK_BARREL,
     SK_TENT,
     SK_CRATE,
-    SK_TOWER
+    SK_TOWER,
+    SK_WINDOW // an unboarded window in a wall: sight passes, nothing else does
 };
 struct Solid {
     float x0, z0, x1, z1, h;
@@ -291,12 +292,22 @@ static void collide(Vector2& o, float r) {
     o.x = Clamp(o.x, r, (o.x > MAP + 10 ? WORLDX : MAP) - r);
     o.y = Clamp(o.y, r, MAP - r);
 }
+static bool windowAt(float x, float z) { // inside an unboarded window opening
+    if (x < 0 || z < 0 || x >= MAP || z >= MAP)
+        return false;
+    for (int i : sgrid[gcl(x)][gcl(z)]) {
+        const Solid& s = solids[i];
+        if (s.kind == SK_WINDOW && x >= s.x0 && x <= s.x1 && z >= s.z0 && z <= s.z1)
+            return true;
+    }
+    return false;
+}
 static bool losClear(Vector2 a, Vector2 b) {
     float d = Vector2Distance(a, b);
     int n = (int)(d / .18f) + 1; // walls and doors are ~.25 m thick: step finer than that
     for (int i = 1; i < n; i++) {
         Vector2 p = Vector2Lerp(a, b, (float)i / n);
-        if (pointSolid(p.x, p.y, 1.4f))
+        if (pointSolid(p.x, p.y, 1.4f) && !windowAt(p.x, p.y)) // windows: you can be seen through them
             return false;
     }
     return true;
