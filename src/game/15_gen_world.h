@@ -1,6 +1,245 @@
 // Nightfall County: gen world.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+// ============================================================ countryside plots
+// A plot claims its land first, then lays out a template that scales with its size and faces the road:
+// house at the front, outbuildings behind, a driveway out to the road, a fence with a gate where the drive crosses it.
+enum PlotKind {
+    PK_SHACK,
+    PK_HOMESTEAD,
+    PK_FARM,
+    PK_RANCH
+};
+static void paintField(Vector2 a, Vector2 b, Color fc, int layer) { // striped crop field between two corners
+    float x0 = std::max(0.f, std::min(a.x, b.x)), x1 = std::min((float)MAP, std::max(a.x, b.x));
+    float z0 = std::max(0.f, std::min(a.y, b.y)), z1 = std::min((float)MAP, std::max(a.y, b.y));
+    curLayer = layer;
+    for (int y = (int)(z0 * PPM); y < (int)(z1 * PPM); y++)
+        for (int x = (int)(x0 * PPM); x < (int)(x1 * PPM); x++)
+            gblend(x, y, ((y / 3) % 2) ? fc : mulC(fc, .82f), .85f);
+    curLayer = -1;
+}
+static bool makePlot(int kind) {
+    static const float SZ[4][4] = {{18, 25, 18, 25}, {25, 35, 25, 35}, {40, 55, 40, 55}, {60, 80, 55, 75}};
+    static const float RD[4][2] = {{6, 25}, {8, 30}, {10, 40}, {15, 60}}; // front edge to road
+    float W = frand(SZ[kind][0], SZ[kind][1]), D = frand(SZ[kind][2], SZ[kind][3]);
+    Vector2 C = V2(frand(80, MAP - 80), frand(80, MAP - 80));
+    Vector2 q = nearestRoadPt(C, nullptr, 1);
+    float dx = q.x - C.x, dz = q.y - C.y;
+    int s = fabsf(dx) > fabsf(dz) ? (dx < 0 ? 2 : 3) : (dz < 0 ? 0 : 1); // side facing the road (= door side)
+    Vector2 f = s == 0 ? V2(0, -1) : s == 1 ? V2(0, 1) : s == 2 ? V2(-1, 0) : V2(1, 0); // plot "front"
+    Vector2 r = V2(-f.y, f.x);                                                          // plot "right"
+    if (chance(.5f))
+        r = Vector2Scale(r, -1); // mirrored layout
+    bool alongZ = f.x == 0;
+    // plot space (u right, v front) -> world
+    auto world = [&](float u, float v) {
+        return Vector2Add(C, Vector2Add(Vector2Scale(r, u), Vector2Scale(f, v)));
+    };
+    float ex = alongZ ? W : D, ez = alongZ ? D : W; // plot extent in world x / z
+    float px0 = C.x - ex / 2, pz0 = C.y - ez / 2, px1 = C.x + ex / 2, pz1 = C.y + ez / 2;
+    // land check: away from towns, hot zones, roads, other plots, anything already built
+    for (Vector2 k : {C, V2(px0, pz0), V2(px1, pz0), V2(px0, pz1), V2(px1, pz1)})
+        if (townAt(k, 1.2f) >= 0 || hotAt(k, 1.1f) >= 0)
+            return false;
+    if (px0 < 40 || pz0 < 40 || px1 > MAP - 40 || pz1 > MAP - 40 || inPlot(C, std::max(ex, ez) / 2 + 6))
+        return false;
+    for (auto& o : plotRects)
+        if (px0 < o.x + o.width + 6 && px1 > o.x - 6 && pz0 < o.y + o.height + 6 && pz1 > o.y - 6)
+            return false;
+    if (!boxFree(px0 - 4, pz0 - 4, px1 + 4, pz1 + 4) || rectOnRoad(px0, pz0, px1, pz1, 2.5f))
+        return false;
+    float frontGap;
+    nearestRoadPt(world(0, D / 2), &frontGap, 1);
+    if (frontGap < RD[kind][0] || frontGap > RD[kind][1])
+        return false;
+    // condition: kept / rundown / abandoned, shared by every building on the plot
+    float cr = frand(0, 1);
+    int pc = cr < .45f ? 0 : cr < .8f ? 1 : 2;
+    auto bcond = [&]() {
+        return pc == 0 ? (chance(.75f) ? 0 : 1) : pc;
+    };
+    // a building in plot space, door toward the road; stays 2 m inside the fence
+    auto build = [&](float u, float v, float w, float d, int type, int floors, Color wc, Color rc) {
+        if (fabsf(u) + w / 2 > W / 2 - 2 || fabsf(v) + d / 2 > D / 2 - 2)
+            return -1;
+        Vector2 P = world(u, v);
+        float bx = alongZ ? w : d, bz = alongZ ? d : w;
+        forceCond = bcond();
+        int bi = makeBuilding(P.x - bx / 2, P.y - bz / 2, bx, bz, type, floors, s, -1, wc, rc);
+        forceCond = -1;
+        return bi;
+    };
+    auto carAt = [&](Vector2 p, float burnP, int vk) { // wrecks don't check for room themselves
+        if (boxFree(p.x - 3, p.y - 3, p.x + 3, p.y + 3) && !rectOnRoad(p.x - 3, p.y - 3, p.x + 3, p.y + 3, .5f))
+            car(p.x, p.y, (alongZ ? PI / 2 : 0) + (chance(.5f) ? PI : 0) + frand(-.2f, .2f), burnP, vk);
+    };
+    auto silo = [&](Vector2 p) {
+        if (!boxFree(p.x - 2.6f, p.y - 2.6f, p.x + 2.6f, p.y + 2.6f) ||
+            rectOnRoad(p.x - 2.4f, p.y - 2.4f, p.x + 2.4f, p.y + 2.4f))
+            return;
+        Color sc = chance(.6f) ? rgba(170, 172, 174) : rgba(150, 110, 80);
+        float h = frand(9, 13);
+        addProp(M_CYL, V3(p.x, 0, p.y), V3(4.4f, h, 4.4f), 0, sc, -1, L_ALWAYS, TX_METAL);
+        addProp(M_SPHERE, V3(p.x, h, p.y), V3(4.4f, 2.4f, 4.4f), 0, mulC(sc, .9f));
+        addSolid(p.x - 2.1f, p.y - 2.1f, p.x + 2.1f, p.y + 2.1f, h, SK_TOWER);
+        aoCircle(p, 4.f, .5f);
+    };
+    Color weathered =
+        pick(std::vector<Color>{rgba(120, 104, 84), rgba(96, 90, 82), rgba(140, 128, 106), rgba(110, 96, 80)});
+    Color shedC = rgba(130, 110, 86), darkRoof = rgba(70, 64, 60);
+    Color barnC = pick(std::vector<Color>{rgba(130, 50, 40), rgba(130, 50, 40), rgba(150, 146, 136), rgba(118, 96, 74),
+                                          rgba(200, 196, 186)});
+    // ---- the main house: if it won't fit, there's no plot
+    float hw, hd, hu, hv;
+    int floors = 1, htype = B_HOUSE;
+    Color hwc = pick(HOUSE_WALL), hrc = pick(ROOF_C);
+    float setback = kind == PK_SHACK ? frand(4, 7) : kind == PK_RANCH ? frand(8, 12) : frand(5, 9);
+    if (kind == PK_SHACK) {
+        htype = B_CABIN;
+        hw = frand(5.5f, 6.5f);
+        hd = frand(5, 5.5f);
+        hwc = weathered;
+        hrc = darkRoof;
+        hu = frand(-.15f, .15f) * W;
+    } else if (kind == PK_HOMESTEAD) {
+        bool two = chance(.4f);
+        hw = two ? frand(8, 10) : frand(10, 13);
+        hd = two ? frand(8, 9) : frand(7, 8.5f);
+        floors = two ? 2 : 1;
+        hu = frand(-.15f, .15f) * W;
+    } else if (kind == PK_FARM) {
+        hw = frand(8, 12);
+        hd = frand(7, 10);
+        floors = chance(.55f) ? 2 : 1;
+        hu = -W * .22f;
+    } else {
+        hw = frand(10, 13);
+        hd = frand(9, 11);
+        floors = 2;
+        hu = -frand(.02f, .1f) * W; // nudged toward the barn side, clear of the corral
+    }
+    hv = D / 2 - setback - hd / 2;
+    int hb = build(hu, hv, hw, hd, htype, floors, hwc, hrc);
+    if (hb < 0)
+        return false;
+    // ---- outbuildings and yard
+    Vector2 houseSide = world(hu - hw / 2 - 1.6f, hv - hd * .2f); // beside the house, for the woodpile
+    float bu = 0, bv = 0, bw = 0, bd = 0;
+    int barn = -1;
+    switch (kind) {
+    case PK_SHACK:
+        if (chance(.7f))
+            woodpile(houseSide, -1);
+        if (chance(.5f))
+            build(W * .3f, -D * .25f, 3.2f, 3.4f, B_SHED, 1, weathered, darkRoof);
+        if (chance(.4f))
+            carAt(world(-W * .28f, -D * .2f), .5f, VK_CIVIL);
+        break;
+    case PK_HOMESTEAD:
+        if (chance(.6f))
+            woodpile(houseSide, -1);
+        if (chance(.6f)) {
+            float side = chance(.5f) ? 1 : -1;
+            build(side * (W / 2 - 4.2f), -(D / 2 - 4.4f), 3.4f, 3.6f, B_SHED, 1, shedC, darkRoof);
+        }
+        if (chance(.4f)) { // vegetable garden
+            Vector2 a = world(W * .12f, -D * .08f), b = world(W * .12f + frand(6, 9), -D * .08f - frand(5, 8));
+            paintField(a, b, pick(std::vector<Color>{rgba(96, 74, 52), rgba(84, 70, 50)}), 1);
+        }
+        if (chance(.5f))
+            carAt(world(hu + hw / 2 + 3.2f, hv + hd / 2 + 2), .1f, VK_CIVIL);
+        break;
+    case PK_FARM:
+    case PK_RANCH: {
+        bool ranch = kind == PK_RANCH;
+        bw = ranch ? frand(16, 20) : frand(12, 16);
+        bd = ranch ? frand(20, 26) : frand(16, 22);
+        bu = ranch ? -W * .25f : W * .2f;
+        bv = -D / 2 + (ranch ? 5 : 4) + bd / 2;
+        barn = build(bu, bv, bw, bd, B_BARN, 1, barnC, darkRoof);
+        if (barn >= 0) {
+            Vector2 apron = world(bu, bv + bd / 2 + 4); // packed dirt in front of the barn doors
+            curLayer = 1;
+            paintCircle(apron, ranch ? 9 : 7, rgba(112, 98, 76), .45f);
+            curLayer = -1;
+            if (chance(.7f))
+                carAt(world(bu + bw * .25f, bv + bd / 2 + 5), .05f, VK_TRACTOR);
+            int ns = ranch ? irand(2, 3) : irand(0, 2);
+            float sg = bu > 0 ? 1 : -1, su = bu + sg * (bw / 2 + 3.2f); // outer side of the barn,
+            if (fabsf(su) + 2.4f > W / 2 - 1.5f)                        // or the inner side if that's
+                su = bu - sg * (bw / 2 + 3.2f);                         // past the fence
+            for (int k = 0; k < ns; k++)
+                silo(world(su, bv - bd / 2 + 3 + k * 5.5f));
+        }
+        if (ranch) { // machine shed opposite the barn
+            float mw = frand(12, 16), md = frand(10, 12);
+            build(W * .25f, -D / 2 + 5 + md / 2, mw, md, chance(.5f) ? B_GARAGE : B_BARN, 1,
+                  pick(std::vector<Color>{rgba(150, 146, 136), rgba(118, 96, 74), barnC}), darkRoof);
+            float cs = frand(15, 20), cu = (bu > 0 ? -1 : 1) * (W / 2 - 3 - cs / 2), cv = frand(-.05f, .1f) * D;
+            Vector2 a = world(cu - cs / 2, cv - cs / 2), b = world(cu + cs / 2, cv + cs / 2); // corral
+            float ax = std::min(a.x, b.x), az = std::min(a.y, b.y), bx = std::max(a.x, b.x), bz = std::max(a.y, b.y);
+            Color cc = rgba(120, 98, 70);
+            fence(ax, az, bx, az, cc, 1.4f);
+            fence(ax, bz, bx, bz, cc, 1.4f);
+            fence(ax, az, ax, bz, cc, 1.4f);
+            fence(bx, az, bx, az + (bz - az) * .6f, cc, 1.4f); // gate gap on one side
+        } else if (chance(.6f)) {
+            build(-(W / 2 - 4.2f), -(D / 2 - 4.4f), 3.4f, 3.6f, B_SHED, 1, shedC, darkRoof);
+        }
+        if (chance(.6f))
+            woodpile(houseSide, -1);
+        // fields around the yard
+        int nf = ranch ? irand(3, 4) : irand(2, 3);
+        for (int k = 0; k < nf; k++) {
+            Color fc =
+                pick(std::vector<Color>{rgba(140, 120, 70), rgba(110, 90, 60), rgba(150, 140, 80), rgba(90, 110, 60)});
+            int layer = chance(.6f) ? 8 : chance(.5f) ? 1 : 5;
+            int where = k == 0 ? 0 : irand(0, 2); // 0 behind, 1/2 the sides
+            float len = frand(25, ranch ? 70 : 55);
+            if (where == 0)
+                paintField(world(-W / 2 * frand(.6f, 1.2f), -D / 2 - 3),
+                           world(W / 2 * frand(.6f, 1.2f), -D / 2 - 3 - len), fc, layer);
+            else {
+                float sd = where == 1 ? 1 : -1;
+                paintField(world(sd * (W / 2 + 3), D / 2 * frand(-.2f, .6f)),
+                           world(sd * (W / 2 + 3 + len), -D / 2 * frand(.6f, 1.3f)), fc, layer);
+            }
+        }
+        break;
+    }
+    }
+    // ---- driveway, then the fence (fence() leaves a gap where it meets the drive: the gate)
+    const Building& H = blds[hb];
+    Vector2 door = H.doors.empty() ? world(hu, hv + hd / 2 + 1) : H.doors[0].out;
+    track(Vector2Add(door, Vector2Scale(f, 2)), kind == PK_RANCH ? 1 : chance(.6f) ? 2 : 1);
+    if (!(kind == PK_SHACK && chance(.5f))) {
+        Color fc = kind == PK_HOMESTEAD && chance(.4f) ? rgba(200, 196, 186)
+                   : kind == PK_SHACK                  ? rgba(100, 86, 70)
+                                                       : rgba(130, 110, 80);
+        float fh = kind == PK_HOMESTEAD ? .95f : 1.1f;
+        auto edge = [&](float ax, float az, float bx, float bz) {
+            if (pc == 0) {
+                fence(ax, az, bx, bz, fc, fh);
+                return;
+            }
+            float L = std::max(fabsf(bx - ax), fabsf(bz - az));
+            int n = std::max(1, (int)(L / 8));
+            for (int i = 0; i < n; i++) { // rundown: gaps; abandoned: only scraps left
+                if (pc == 1 ? chance(.25f) : !chance(.15f))
+                    continue;
+                float t0 = (float)i / n, t1 = (float)(i + 1) / n;
+                fence(ax + (bx - ax) * t0, az + (bz - az) * t0, ax + (bx - ax) * t1, az + (bz - az) * t1, fc, fh);
+            }
+        };
+        edge(px0, pz0, px1, pz0);
+        edge(px0, pz1, px1, pz1);
+        edge(px0, pz0, px0, pz1);
+        edge(px1, pz0, px1, pz1);
+    }
+    plotRects.push_back({px0, pz0, px1 - px0, pz1 - pz0});
+    return true;
+}
 static void genWorld() {
     randomizeTowns();
     hotZones.clear();
@@ -17,6 +256,7 @@ static void genWorld() {
     spawnPts.clear();
     staticLights.clear();
     yardSpots.clear();
+    plotRects.clear();
     for (auto& c : sgrid)
         for (auto& v : c)
             v.clear();
@@ -141,56 +381,13 @@ static void genWorld() {
     for (int i = 0; i < 6; i++)
         genTown(i);
     genHotZones();
-    // farms (random)
-    for (int f = 0, tries = 0; f < (int)(10 * AREA) && tries < (int)(400 * AREA); tries++) {
-        Vector2 p = V2(frand(80, MAP - 80), frand(80, MAP - 80));
-        if (townAt(p, 1.6f) >= 0)
-            continue;
-        float rd = roadDist(p);
-        if (rd < 18 || rd > 70)
-            continue;
-        float fx = p.x, fz = p.y;
-        for (int k = 0; k < irand(2, 4); k++) {
-            float w = frand(40, 90), d = frand(40, 90), ox = fx + frand(-90, 30), oz = fz + frand(-90, 30);
-            Color fc =
-                pick(std::vector<Color>{rgba(140, 120, 70), rgba(110, 90, 60), rgba(150, 140, 80), rgba(90, 110, 60)});
-            curLayer = chance(.6f) ? 8 : chance(.5f) ? 1 : 5;
-            for (int y = (int)(oz * PPM); y < (int)((oz + d) * PPM); y++)
-                for (int x = (int)(ox * PPM); x < (int)((ox + w) * PPM); x++)
-                    gblend(x, y, ((y / 3) % 2) ? fc : mulC(fc, .82f), .85f);
-            curLayer = -1;
-        }
-        int fh = makeBuilding(fx, fz, frand(8, 12), frand(7, 10), B_HOUSE, chance(.55f) ? 2 : 1, 1, -1, pick(HOUSE_WALL),
-                              pick(ROOF_C));
-        if (chance(.6f))
-            woodpile(V2(fx - 3, fz + 4), -1);
-        Color barnC = pick(std::vector<Color>{rgba(130, 50, 40), rgba(130, 50, 40), rgba(150, 146, 136), rgba(118, 96, 74), rgba(200, 196, 186)});
-        float barnW = frand(12, 16), barnD = frand(16, 22);
-        if (makeBuilding(fx + 16, fz - 4, barnW, barnD, B_BARN, 1, 2, -1, barnC, rgba(70, 64, 60)) >= 0 &&
-            chance(.7f))
-            car(fx + 11, fz + 18, frand(0, 6), .05f, VK_TRACTOR);
-        for (int k = 0; k < irand(0, 2); k++) {
-            float sx = fx + 33 + k * 5.5f, sz = fz + 2;
-            if (boxFree(sx - 2.4f, sz - 2.4f, sx + 2.4f, sz + 2.4f) &&
-                !rectOnRoad(sx - 2.4f, sz - 2.4f, sx + 2.4f, sz + 2.4f)) { // grain silos
-                Color sc = chance(.6f) ? rgba(170, 172, 174) : rgba(150, 110, 80);
-                float h = frand(9, 13);
-                addProp(M_CYL, V3(sx, 0, sz), V3(4.4f, h, 4.4f), 0, sc, -1, L_ALWAYS, TX_METAL);
-                addProp(M_SPHERE, V3(sx, h, sz), V3(4.4f, 2.4f, 4.4f), 0, mulC(sc, .9f));
-                addSolid(sx - 2.1f, sz - 2.1f, sx + 2.1f, sz + 2.1f, h, SK_TOWER);
-                aoCircle(V2(sx, sz), 4.f, .5f);
-            }
-        }
-        if (chance(.6f))
-            makeBuilding(fx - 6, fz - 7.5f, 3.4f, 3.6f, B_SHED, 1, 1, -1, rgba(130, 110, 86), rgba(70, 64, 60));
-        if (fh >= 0) {
-            const Building& hb = blds[fh];
-            Vector2 dp = hb.doors.empty() ? V2(hb.x0 + 4, hb.z1 + 2) : hb.doors[0].out;
-            track(Vector2Add(dp, V2(0, 2)), chance(.6f) ? 2 : 1);
-        }
-        fence(fx - 6, fz - 10, fx + 34, fz - 10, rgba(130, 110, 80));
-        fence(fx - 6, fz + 22, fx + 34, fz + 22, rgba(130, 110, 80));
-        f++;
+    // countryside plots: ranches first (they need the most room), then farms, homesteads, shack lots
+    {
+        static const int WANT[4] = {6, 10, 8, 3}; // shack, homestead, farm, ranch (x AREA)
+        for (int kind : {PK_RANCH, PK_FARM, PK_HOMESTEAD, PK_SHACK})
+            for (int made = 0, tries = 0; made < (int)(WANT[kind] * AREA) && tries < (int)(80 * WANT[kind] * AREA);
+                 tries++)
+                made += makePlot(kind);
     }
     // forests
     for (int i = 0; i < (int)(22 * AREA); i++) {
@@ -203,8 +400,11 @@ static void genWorld() {
         curLayer = -1;
         if (chance(.5f)) {
             Vector2 p = Vector2Add(c, polar(frand(0, 2 * PI), R * .4f));
-            Color cabC = pick(std::vector<Color>{rgba(110, 82, 58), rgba(92, 70, 52), rgba(128, 100, 72), rgba(84, 78, 70)});
-            int cb = makeBuilding(p.x, p.y, frand(6, 9), frand(5, 7), B_CABIN, chance(.25f) ? 2 : 1, irand(0, 3), -1, cabC, rgba(60, 54, 48));
+            Color cabC =
+                pick(std::vector<Color>{rgba(110, 82, 58), rgba(92, 70, 52), rgba(128, 100, 72), rgba(84, 78, 70)});
+            int cb = inPlot(p, 12) ? -1
+                                   : makeBuilding(p.x, p.y, frand(6, 9), frand(5, 7), B_CABIN, chance(.25f) ? 2 : 1,
+                                                  irand(0, 3), -1, cabC, rgba(60, 54, 48));
             if (cb >= 0) {
                 woodpile(V2(p.x - 2.2f, p.y + 3), -1);
                 if (chance(.4f))
@@ -217,7 +417,7 @@ static void genWorld() {
         }
         for (int k = 0; k < (chance(.6f) ? irand(1, 2) : 0); k++) {
             Vector2 p = Vector2Add(c, polar(frand(0, 2 * PI), R * frand(.5f, .9f)));
-            if (!boxFree(p.x - 2, p.y - 2, p.x + 2, p.y + 2) || roadDist(p) < 4)
+            if (!boxFree(p.x - 2, p.y - 2, p.x + 2, p.y + 2) || roadDist(p) < 4 || inPlot(p, 3))
                 continue; // hunting stand
             Color wd = rgba(96, 74, 52), lg = rgba(84, 66, 48);
             float hh = 4.2f;
@@ -249,7 +449,7 @@ static void genWorld() {
     // trailer parks: gravel loop off a road, a few singlewides in rows
     for (int k = 0, tries = 0; k < (int)(3 * AREA) && tries < 300; tries++) {
         Vector2 c = V2(frand(120, MAP - 120), frand(120, MAP - 120));
-        if (townAt(c, 1.5f) >= 0 || hotAt(c, 1.3f) >= 0)
+        if (townAt(c, 1.5f) >= 0 || hotAt(c, 1.3f) >= 0 || inPlot(c, 32))
             continue;
         float rd = roadDist(c);
         if (rd < 20 || rd > 60)
@@ -275,57 +475,6 @@ static void genWorld() {
             k++;
         }
     }
-    // roadside homesteads: ranch houses, two-stories and weathered shacks, facing the road
-    for (int k = 0, tries = 0; k < (int)(14 * AREA) && tries < (int)(600 * AREA); tries++) {
-        Vector2 p = V2(frand(80, MAP - 80), frand(80, MAP - 80));
-        if (townAt(p, 1.4f) >= 0 || hotAt(p, 1.2f) >= 0)
-            continue;
-        float rd = roadDist(p);
-        if (rd < 12 || rd > 30)
-            continue;
-        Vector2 r = nearestRoadPt(p);
-        float dx = r.x - p.x, dz = r.y - p.y;
-        int side = fabsf(dx) > fabsf(dz) ? (dx < 0 ? 2 : 3) : (dz < 0 ? 0 : 1);
-        float roll = frand(0, 1);
-        int type, floors;
-        Color wall, roof;
-        float w, d;
-        if (roll < .45f) {
-            type = B_HOUSE;
-            w = frand(10, 13);
-            d = frand(7, 8.5f);
-            floors = 1;
-            wall = pick(HOUSE_WALL);
-            roof = pick(ROOF_C);
-        } else if (roll < .7f) {
-            type = B_HOUSE;
-            w = frand(8, 10);
-            d = frand(8, 9);
-            floors = 2;
-            wall = pick(HOUSE_WALL);
-            roof = pick(ROOF_C);
-        } else {
-            type = B_CABIN;
-            w = frand(5.5f, 6.5f);
-            d = frand(5, 5.5f);
-            floors = 1;
-            wall = pick(std::vector<Color>{rgba(120, 104, 84), rgba(96, 90, 82), rgba(140, 128, 106), rgba(110, 96, 80)});
-            roof = rgba(70, 64, 60);
-        }
-        int hb = makeBuilding(p.x - w / 2, p.y - d / 2, w, d, type, floors, side, -1, wall, roof);
-        if (hb < 0)
-            continue;
-        if (chance(.5f))
-            woodpile(V2(p.x - w / 2 - 1.5f, p.y + d / 2 - 1), -1);
-        if (chance(.35f))
-            makeBuilding(p.x + w / 2 + 3, p.y - d / 2, 3.2f, 3.4f, B_SHED, 1, side, -1, rgba(130, 110, 86), rgba(70, 64, 60));
-        if (chance(.3f))
-            car(p.x + w / 2 + 2, p.y + d / 2 + 3, frand(0, 6), .3f);
-        const Building& b = blds[hb];
-        track(b.doors.empty() ? p : b.doors[0].out, 1);
-        k++;
-    }
-
     // pine ridge sits in forest
     for (int k = 0; k < 500; k++) {
         Vector2 p = Vector2Add(TOWNS[3].c, polar(frand(0, 2 * PI), frand(TOWNS[3].r * 1.05f, TOWNS[3].r * 2.4f)));
@@ -345,7 +494,7 @@ static void genWorld() {
                                       "nature/Rock_Moss_1", "nature/Rock_Moss_2", "nature/Rock_Moss_3"};
         for (int k = 0; k < (int)(220 * AREA); k++) {
             Vector2 p = V2(frand(5, MAP - 5), frand(5, MAP - 5));
-            if (townAt(p, 1.1f) >= 0 || roadDist(p) < 4 || !freeAt(p.x, p.y, 2))
+            if (townAt(p, 1.1f) >= 0 || roadDist(p) < 4 || !freeAt(p.x, p.y, 2) || inPlot(p, 2))
                 continue;
             float s = frand(.8f, 2.4f);
             int ra = AS(rocks[irand(0, 6)]);

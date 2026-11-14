@@ -114,7 +114,7 @@ static void serviceCar(int bi, int type) { // a matching vehicle out front of po
         car(x, z, chance(.5f) ? 0 : PI, .15f, k);
 }
 static void addTree(Vector2 p, int kind) {
-    if (!freeAt(p.x, p.y, 1.2f) || hotAt(p, .85f) >= 0)
+    if (!freeAt(p.x, p.y, 1.2f) || hotAt(p, .85f) >= 0 || inPlot(p, 1.5f))
         return;
     for (int cx = gcl(p.x - 3); cx <= gcl(p.x + 3); cx++)
         for (int cz = gcl(p.y - 3); cz <= gcl(p.y + 3); cz++)

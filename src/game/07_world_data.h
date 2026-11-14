@@ -350,6 +350,14 @@ struct HotZone {
     bool seen = false;
 };
 static std::vector<HotZone> hotZones;
+static std::vector<Rectangle>
+    plotRects; // countryside yards (farms, homesteads...): kept clear of trees, rocks, other lots
+static bool inPlot(Vector2 p, float m) {
+    for (auto& r : plotRects)
+        if (p.x > r.x - m && p.x < r.x + r.width + m && p.y > r.y - m && p.y < r.y + r.height + m)
+            return true;
+    return false;
+}
 static int hotAt(Vector2 p, float k = 1.f) {
     for (int i = 0; i < (int)hotZones.size(); i++)
         if (Vector2Distance(p, hotZones[i].c) < hotZones[i].r * k)

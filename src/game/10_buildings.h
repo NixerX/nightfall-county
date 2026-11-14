@@ -105,6 +105,7 @@ static int makeBuilding(float x0, float z0, float w, float d, int type, int floo
     }
     return bi;
 }
+static int forceCond = -1; // plots set this so all of a farm's buildings share one condition
 static int makeBuildingRaw(float x0, float z0, float w, float d, int type, int floors, int doorSide, int town,
                            Color wallC, Color roofC) {
     if (!boxFree(x0 - .3f, z0 - .3f, x0 + w + .3f, z0 + d + .3f) || rectOnRoad(x0, z0, x0 + w, z0 + d, 1.2f))
@@ -121,6 +122,8 @@ static int makeBuildingRaw(float x0, float z0, float w, float d, int type, int f
     {
         float r = frand(0, 1);
         B.cond = r < .3f ? 0 : r < .72f ? 1 : 2;
+        if (forceCond >= 0)
+            B.cond = forceCond;
     }
     curCond = B.cond;
     furnB.on = false;
