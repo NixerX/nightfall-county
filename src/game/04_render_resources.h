@@ -111,6 +111,12 @@ static Mesh gableMesh() { // base [-.5,.5]^2 at y=0, ridge along x at y=1, z=0. 
     std::vector<Vector3> t = {a, r0, r1, a, r1, b, d, c, r1, d, r1, r0, a, d, r0, b, r1, c};
     return buildMesh(t);
 }
+static void fillMaps(Material& m) { // every lit-shader sampler gets a texture: macOS skips draws that read an empty one
+    Texture2D w = {rlGetTextureIdDefault(), 1, 1, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+    for (int i = 0; i <= MATERIAL_MAP_HEIGHT; i++)
+        if (m.maps[i].texture.id == 0)
+            m.maps[i].texture = w;
+}
 static void initRender() {
     meshes[M_CUBE] = GenMeshCube(1, 1, 1);
     meshes[M_SPHERE] = GenMeshSphere(.5f, 8, 10);
@@ -150,6 +156,13 @@ static void initRender() {
         setU(uShadowMap, &slot, SHADER_UNIFORM_INT);
         int slot2 = 12;
         setU(uFlShadowMap, &slot2, SHADER_UNIFORM_INT);
+        // never leave a sampler's slot empty: macOS (OpenGL on Metal) silently skips every draw whose
+        // shader has a sampler bound to nothing. A 1x1 white texture stands in until a shadow map is ready.
+        rlActiveTextureSlot(11);
+        rlEnableTexture(rlGetTextureIdDefault());
+        rlActiveTextureSlot(12);
+        rlEnableTexture(rlGetTextureIdDefault());
+        rlActiveTextureSlot(0);
         setU(uFlShadowOn, &z, SHADER_UNIFORM_INT);
         float ex = 1.5f;
         setU(uExposure, &ex, SHADER_UNIFORM_FLOAT);
@@ -158,6 +171,7 @@ static void initRender() {
     }
     litMat = LoadMaterialDefault();
     litMat.shader = lit;
+    fillMaps(litMat);
     // detail noise
     Image dn = GenImagePerlinNoise(256, 256, 0, 0, 5.f);
     detailTex = LoadTextureFromImage(dn);

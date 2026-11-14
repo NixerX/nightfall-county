@@ -652,6 +652,7 @@ static void genWorld() {
         groundMat.maps[MATERIAL_MAP_EMISSION].texture = splatTex[1];
         groundMat.maps[MATERIAL_MAP_HEIGHT].texture = splatTex[2];
     }
+    fillMaps(groundMat);
     // map texture
     if (mapTex.id)
         UnloadTexture(mapTex);

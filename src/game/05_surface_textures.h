@@ -180,6 +180,8 @@ static void initSurfaces() {
         UnloadImage(nm);
         UnloadImage(r);
     }
+    for (int k = 1; k < TX_COUNT; k++)
+        fillMaps(surfMat[k]);
 }
 static Texture2D groundAtlas[2], splatTex[3];
 static bool groundAtlasOk = false;

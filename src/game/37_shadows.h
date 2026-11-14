@@ -98,7 +98,7 @@ static void drawCasters(Vector2 c, float R, bool withPlayer = true) {
 }
 static void renderShadows() {
     rlActiveTextureSlot(11);
-    rlDisableTexture();
+    rlEnableTexture(rlGetTextureIdDefault()); // placeholder, never empty (macOS), never the map we're drawing into
     rlActiveTextureSlot(0);
     float dk = darkK();
     int on = shadowsOk && cfg.shadows > 0 && dk < .9f ? 1 : 0;
@@ -134,7 +134,7 @@ static void renderShadows() {
 }
 static void renderFlashShadow() {
     rlActiveTextureSlot(12);
-    rlDisableTexture();
+    rlEnableTexture(rlGetTextureIdDefault()); // placeholder, never empty (macOS), never the map we're drawing into
     rlActiveTextureSlot(0);
     int on = flOk && cfg.shadows > 0 && P.light && state != ST_TITLE && state != ST_DEAD ? 1 : 0;
     setU(uFlShadowOn, &on, SHADER_UNIFORM_INT);

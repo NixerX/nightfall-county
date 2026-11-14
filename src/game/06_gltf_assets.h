@@ -80,6 +80,7 @@ static int loadAsset(const std::string& key) {
                  (int)(255 * powf(c.b / 255.f, 1 / 2.2f)), c.a);
         a.base.push_back(c);
         a.m.materials[i].shader = a.skinned ? litSkin : lit;
+        fillMaps(a.m.materials[i]);
     }
     if (a.skinned) {
         a.rig = makeRig(a.m);
