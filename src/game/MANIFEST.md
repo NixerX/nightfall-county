@@ -29,8 +29,8 @@ Code style is set by `.clang-format` in the repo root (one statement per line). 
 | `12_towns.h` | World gen | Fixed-seed town layouts (same every run) |
 | `13_life_map.h` | World gen | Per-life randomisation: town positions, crates, tents, hot zones |
 | `14_interiors.h` | World gen | Upstairs and basement "cells", stairs between them |
-| `15_gen_world.h` | World gen | `genWorld`: assembles the whole map, including the random countryside |
-| `16_static_merge.h` | Performance | Merges static props into one mesh per 32 m chunk |
+| `15_gen_world.h` | World gen | `genWorld`: assembles the whole map. Countryside plots (`makePlot`: shack lots, homesteads, farms, ranches) sit at the top of the file |
+| `16_static_merge.h` | Performance | Merges static props into one mesh per 32 m chunk (`buildChunk` rebuilds one, `charWreck` uses it) |
 
 ## Things and people
 

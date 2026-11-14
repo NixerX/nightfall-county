@@ -2,7 +2,7 @@
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
 // ============================================================ util
-static const char* VERSION = "v0.8.7";
+static const char* VERSION = "v0.8.8";
 static std::mt19937 rng(1337);
 static float frand(float a, float b) {
     return a + (b - a) * std::uniform_real_distribution<float>(0.f, 1.f)(rng);

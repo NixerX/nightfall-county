@@ -1,5 +1,23 @@
 # Nightfall County changelog
 
+## v0.8.8
+- Countryside plots: shack lots, homesteads, family farms and big ranches, each sized and laid out to make sense. They face the road with a driveway and a gated, fenced yard; farms have barns, silos, tractors and fields; ranches add a machine shed and a corral. Some are kept up, some rundown, some abandoned.
+- Car alarms: searching a car can set off its alarm (about 1 in 9). It wails for ten seconds and draws a big, mostly slow crowd in from out of sight. Run, or smash the car with a melee weapon to shut it up.
+- Some wrecks are still smouldering. Watch for the smoke and give them room: get close and they hiss, then cook off.
+- Brutes: base health 480 to 300, and they no longer get tougher as you level. The charge is telegraphed (it plants its feet and roars first), a charge that misses leaves it dazed for two seconds, and only a charge hit can break your leg (8%).
+- Walls are walls: no hitting, getting hit, looting or searching cars through them. Walls also muffle noise: zombies outside hear what you do inside at less than half the distance.
+- Windows: zombies can see you through unboarded windows. Stay away from the glass.
+- Everything costs 30% less stamina: sprinting, swings, dodges, kicks, vaults and blocks.
+- Sickness is slower: the first day it saps your stamina (down to half), then a fever slowly drains health. Antibiotics still cure it.
+- Picking up a gun no longer switches to it. It goes in its slot and you keep what you're holding (unless it replaces the gun in your hand). Settings: "Auto-equip guns" On/Off, default Off.
+- Click-to-move: hold Ctrl or Alt to stand your ground and attack where you click. Also stops any walk or chase in progress.
+- Search car works from anywhere around the car, not just the middle of its side.
+- Loot inside buildings stays hidden until you go in or peek through the door.
+- The game no longer pauses when you click away from the window. Press P or Esc to pause.
+- Fixed: trees growing inside buildings, fences running through barns, furniture flickering, grey interior walls showing through outside walls, chairs stuck in tables, shelves near doorways with no collision, loot lying in empty fields, medevac loot without its helicopter, and the gun hover card hiding under inventory panels.
+- Saves from older versions start a new life instead of loading onto the wrong map.
+- Under the hood: the game is split into src/game/ files (see src/game/MANIFEST.md) and formatted one statement per line.
+
 ## v0.8.7
 - Stealth: while crouching, zombies build up a notice meter while they can see you (standing is still instant). Point-blank or hidden-and-close spots you at once. Sprinting and crouching change how fast they notice.
 - Exposure colour on the HIDDEN/NOTICED status: green, yellow, orange, red, and blinking red when you're about to be spotted. A warning tick plays at orange and speeds up at red.
