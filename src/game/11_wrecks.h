@@ -235,14 +235,14 @@ track(Vector2 from, int tier = 2,
 static void fence(float x0, float z0, float x1, float z1, Color c, float h = 1.1f) {
     bool horiz = fabsf(z1 - z0) < .01f;
     float len = horiz ? fabsf(x1 - x0) : fabsf(z1 - z0);
-    { // split around roads: build only the runs that stay off the asphalt
+    { // split around roads and buildings: build only the runs that stay clear of both
         int n = std::max(1, (int)(len / .5f));
         bool any = false, all = true;
         std::vector<bool> ok(n + 1);
         for (int i = 0; i <= n; i++) {
             float t = (float)i / n;
             Vector2 p = V2(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t);
-            ok[i] = roadDist(p) > .5f;
+            ok[i] = roadDist(p) > .5f && !inBuilding(p, .4f); // skip roads and buildings
             any |= !ok[i];
             all &= ok[i];
         }

@@ -69,7 +69,7 @@ static Weapon rGun(std::istream& in) {
     in >> std::quoted(w.name);
     return w;
 }
-constexpr int SAVE_VER = 3; // bump when world generation changes (old saves would load onto a different map)
+constexpr int SAVE_VER = 4; // bump when world generation changes (old saves would load onto a different map)
 static void saveGame() {
     std::ofstream o(runSavePath());
     if (!o) {

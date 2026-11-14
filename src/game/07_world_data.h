@@ -310,6 +310,14 @@ static bool wallBetween(Vector2 a, Vector2 b) { // a wall or closed door in the 
     }
     return false;
 }
+static bool inBuilding(Vector2 p, float m) { // inside any building's footprint (plus margin m), enterable or not
+    for (int bi : bgrid[gcl(p.x)][gcl(p.y)]) {
+        const Building& b = blds[bi];
+        if (p.x > b.x0 - m && p.x < b.x1 + m && p.y > b.z0 - m && p.y < b.z1 + m)
+            return true;
+    }
+    return false;
+}
 static int buildingAt(Vector2 p) {
     if (p.x < 0 || p.y < 0 || p.x >= WORLDX || p.y >= MAP)
         return -1;
