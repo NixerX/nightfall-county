@@ -41,7 +41,7 @@ struct Zombie {
     Vector2 p, k{};
     float r, hp, mhp, spd, dmg, atk = .4f, seed, a, aggro = 0;
     int side;
-    float burn = 0, slow = 0, flash = 0, chg = 0, chgT = 0, ca = 0, lureT = 0;
+    float burn = 0, slow = 0, flash = 0, chg = 0, chgT = 0, chgW = 0, ca = 0, lureT = 0;
     Vector2 lp{}, np{};
     float noiseT = 0, wt = 0, wa, stun = 0, bleed = 0, losT = 0, walk = 0;
     bool sees = false;

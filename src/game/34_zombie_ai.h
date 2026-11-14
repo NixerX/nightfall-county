@@ -305,7 +305,18 @@ static void updateZombies(float dt) {
                    (z.slow > 0 ? .4f : 1) * (z.stun > 0 ? .3f : 1);
         if (z.type == Z_BRUTE) {
             z.chg -= dt;
-            if (z.chgT > 0) {
+            if (z.chgW > 0) { // wind-up: plants its feet and roars, then launches at where you are now
+                z.chgW -= dt;
+                sp = 0;
+                ang = atan2f(dz, dx);
+                if (chance(dt * 25))
+                    parts.push_back({xz3(z.p, .1f), V3(frand(-1, 1), .4f, frand(-1, 1)), .5f, .5f, .35f,
+                                     rgba(90, 80, 70, 150), P_DUST});
+                if (z.chgW <= 0) {
+                    z.chgT = .8f;
+                    z.ca = atan2f(dz, dx);
+                }
+            } else if (z.chgT > 0) {
                 z.chgT -= dt;
                 ang = z.ca;
                 sp = z.spd * 4.5f;
@@ -313,13 +324,15 @@ static void updateZombies(float dt) {
                     parts.push_back({xz3(z.p, .1f), V3(frand(-1, 1), .5f, frand(-1, 1)), .6f, .6f, .4f,
                                      rgba(90, 80, 70, 150), P_DUST});
                 if (d < z.r + .5f && !wallBetween(z.p, P.p)) {
+                    bruteCharge = true;
                     hitPlayer(z.dmg * 1.3f, z.p, Z_BRUTE);
+                    bruteCharge = false;
                     z.chgT = 0;
-                }
+                } else if (z.chgT <= 0)
+                    z.stun = std::max(z.stun, 2.f); // missed: it stumbles, dazed. Your opening.
             } else if (chase && d < 12 && d > 3 && z.chg <= 0) {
-                z.chgT = .8f;
+                z.chgW = .6f;
                 z.chg = 5;
-                z.ca = atan2f(dz, dx);
                 sfxAt(SFX_ROAR, z.p);
                 shake = std::min(.5f, shake + .15f);
             }
@@ -376,7 +389,8 @@ static void updateZombies(float dt) {
             collide(z.p, z.r);
             continue;
         }
-        if (d < z.r + .35f + .35f && P.roll <= 0 && P.loft < 0 && !wallBetween(z.p, P.p)) {
+        if (d < z.r + .35f + .35f && P.roll <= 0 && P.loft < 0 && !(z.type == Z_BRUTE && (z.stun > 0 || z.chgW > 0)) &&
+            !wallBetween(z.p, P.p)) {
             z.atk -= dt;
             if (z.atk <= 0) {
                 z.atk = z.type == Z_VOLATILE ? .6f : .95f;

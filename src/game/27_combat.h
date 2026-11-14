@@ -20,7 +20,7 @@ static void noiseAt(Vector2 p, float r) {
     int pb = buildingAt(p);
     for (auto& z : zombies) {
         if (Vector2DistanceSqr(z.p, p) >= r * r)
-            continue; // out of range anyway: skip the building lookup
+            continue;                                   // out of range anyway: skip the building lookup
         float rr = buildingAt(z.p) != pb ? r * .4f : r; // walls muffle: inside vs outside hears 40% as far
         if (Vector2DistanceSqr(z.p, p) < rr * rr && z.aggro <= 0 && z.ignoreT <= 0 && z.pound < 0) {
             z.np = Vector2Add(p, V2(frand(-4, 4), frand(-4, 4)));
@@ -28,6 +28,7 @@ static void noiseAt(Vector2 p, float r) {
         }
     }
 }
+static bool bruteCharge = false; // the hit being dealt is a brute's charge (only that can break a leg)
 static void hitPlayer(float dmg, Vector2 src, int srcType) {
     if (P.iframe > 0 || state != ST_PLAY)
         return;
@@ -83,7 +84,7 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
             P.sick = 1;
             msg("You feel sick. Find antibiotics.", rgba(170, 200, 90));
         }
-        if (srcType == Z_BRUTE && chance(.12f) && !P.broken) {
+        if (srcType == Z_BRUTE && bruteCharge && chance(.08f) && !P.broken) {
             P.broken = true;
             msg("Your leg is broken. Morphine will fix it.", BLOODC);
         }
