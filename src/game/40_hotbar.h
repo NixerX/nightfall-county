@@ -347,10 +347,14 @@ static void drawHUD() {
         Vector2 mp = GetMousePosition();
         float s = 7 + (g ? g->spread * 120 : 4) * (P.sprint ? 1.8f : P.crouch ? .6f : 1) * (1 + P.shiver);
         Color cc = P.reload > 0 ? rgba(226, 221, 208, 120) : BONE;
-        DrawLineEx(V2(mp.x - s - 7, mp.y), V2(mp.x - s, mp.y), 2, cc);
-        DrawLineEx(V2(mp.x + s, mp.y), V2(mp.x + s + 7, mp.y), 2, cc);
-        DrawLineEx(V2(mp.x, mp.y - s - 7), V2(mp.x, mp.y - s), 2, cc);
-        DrawLineEx(V2(mp.x, mp.y + s), V2(mp.x, mp.y + s + 7), 2, cc);
+        for (int pass = 0; pass < 2; pass++) { // dark outline first, then the line: shows up on snow and concrete too
+            float th = pass ? 2 : 4.5f, e = pass ? 0 : 1.2f;
+            Color c = pass ? cc : rgba(8, 8, 10, P.reload > 0 ? 110 : 220);
+            DrawLineEx(V2(mp.x - s - 7 - e, mp.y), V2(mp.x - s + e, mp.y), th, c);
+            DrawLineEx(V2(mp.x + s - e, mp.y), V2(mp.x + s + 7 + e, mp.y), th, c);
+            DrawLineEx(V2(mp.x, mp.y - s - 7 - e), V2(mp.x, mp.y - s + e), th, c);
+            DrawLineEx(V2(mp.x, mp.y + s - e), V2(mp.x, mp.y + s + 7 + e), th, c);
+        }
         if (P.reload > 0 && g)
             DrawRing(mp, s + 11, s + 14, -90, -90 + 360 * (1 - P.reload * P.perks.reload / g->rel), 32, SODIUM);
     }

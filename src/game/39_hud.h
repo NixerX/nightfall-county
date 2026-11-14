@@ -25,7 +25,8 @@ static std::string hhmm() {
     return b;
 }
 static void drawCursor() {
-    Vector2 m = GetMousePosition();
+    Vector2 m = GetMousePosition(); // dark outline under a light fill: readable on any background
+    DrawTriangle(V2(m.x - 1.5f, m.y - 3), V2(m.x - 1.5f, m.y + 21.5f), V2(m.x + 15.5f, m.y + 14.5f), rgba(8, 8, 10));
     DrawTriangle(m, V2(m.x, m.y + 18), V2(m.x + 12, m.y + 13), BONE);
 }
 static bool button(const char* label, float x, float y, float w, float h, bool primary) {
