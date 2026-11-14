@@ -130,6 +130,10 @@ static void initRender() {
     litSkin.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocation(litSkin, "matModel");
     litSkin.locs[SHADER_LOC_MATRIX_NORMAL] = GetShaderLocation(litSkin, "matNormal");
     litSkin.locs[SHADER_LOC_BONE_MATRICES] = GetShaderLocation(litSkin, "boneMatrices");
+    if (getenv("NF_SAFE")) { // debugging: raylib's plain built-in shader instead of ours (flat, unlit, no animation)
+        lit = litSkin = LoadShader(nullptr, nullptr);
+        TraceLog(LOG_WARNING, "NF_SAFE: using raylib's default shader for the world");
+    }
     litSkin.locs[SHADER_LOC_VERTEX_BONEIDS] = GetShaderLocationAttrib(litSkin, "vertexBoneIds");
     litSkin.locs[SHADER_LOC_VERTEX_BONEWEIGHTS] = GetShaderLocationAttrib(litSkin, "vertexBoneWeights");
     for (int u = 0; u < U_COUNT; u++) {

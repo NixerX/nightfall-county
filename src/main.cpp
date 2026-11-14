@@ -290,6 +290,17 @@ int main() {
         BeginMode3D(cam3);
         renderWorld3D();
         EndMode3D();
+        static const bool glDebug = getenv("NF_GLDEBUG") != nullptr; // run with NF_GLDEBUG=1 to log this once a second
+        static int dbgFrame = 0;
+        if (glDebug && dbgFrame++ % 60 == 0) {
+            TraceLog(LOG_WARNING, "GLDEBUG state=%d player=(%.2f,%.2f) cam=(%.2f,%.2f,%.2f) target=(%.2f,%.2f,%.2f)",
+                     (int)state, P.p.x, P.p.y, cam3.position.x, cam3.position.y, cam3.position.z, cam3.target.x,
+                     cam3.target.y, cam3.target.z);
+            TraceLog(LOG_WARNING, "GLDEBUG W=%d H=%d screen=%dx%d render=%dx%d dpi=%.2f zoom=%.2f", W, H,
+                     GetScreenWidth(), GetScreenHeight(), GetRenderWidth(), GetRenderHeight(), GetWindowScaleDPI().x,
+                     camZoom);
+            rlCheckErrors(); // logs any pending OpenGL error
+        }
         // world-space floaters
         for (auto& f : floaters) {
             Vector2 s = GetWorldToScreen(f.p, cam3);
