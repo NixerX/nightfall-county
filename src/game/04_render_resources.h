@@ -136,6 +136,12 @@ static void initRender() {
     litSkin.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocation(litSkin, "matModel");
     litSkin.locs[SHADER_LOC_MATRIX_NORMAL] = GetShaderLocation(litSkin, "matNormal");
     litSkin.locs[SHADER_LOC_BONE_MATRICES] = GetShaderLocation(litSkin, "boneMatrices");
+    if (const char* dm = getenv("NF_DBG")) { // debugging: which stage of the lit shader goes wrong
+        int m = atoi(dm);
+        SetShaderValue(lit, GetShaderLocation(lit, "dbgMode"), &m, SHADER_UNIFORM_INT);
+        SetShaderValue(litSkin, GetShaderLocation(litSkin, "dbgMode"), &m, SHADER_UNIFORM_INT);
+        TraceLog(LOG_WARNING, "NF_DBG: lit shader debug mode %d", m);
+    }
     if (getenv("NF_SAFE")) { // debugging: raylib's plain built-in shader instead of ours (flat, unlit, no animation)
         lit = litSkin = LoadShader(nullptr, nullptr);
         TraceLog(LOG_WARNING, "NF_SAFE: using raylib's default shader for the world");

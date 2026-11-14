@@ -35,6 +35,7 @@ uniform vec4 colDiffuse; uniform int texMode; uniform float texScale; uniform ve
 uniform vec3 sunDir; uniform vec3 sunCol; uniform vec3 ambCol; uniform vec3 skyCol;
 uniform vec3 fogCol; uniform vec2 fogCenter; uniform float fogNear; uniform float fogFar;
 uniform vec3 viewPos; uniform float wet; uniform int useDetail; uniform float exposure;
+uniform int dbgMode; // NF_DBG=n: show one stage of this shader (0 = normal)
 uniform vec3 flPos; uniform vec3 flDir; uniform vec3 flCol; uniform float flCos; uniform float flRange;
 #define MAXL 16
 uniform int nLights; uniform vec4 lPos[MAXL]; uniform vec3 lCol[MAXL];
@@ -58,7 +59,11 @@ float flShadowAt(vec3 n){ // the flashlight's own shadow map: walls, cars and bo
 vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
 void main(){
   if(shadowPass==1){ if(texture(texture0, fragTexCoord).a*colDiffuse.a*fragColor.a < 0.5) discard; finalColor = vec4(1.0); return; }
+  if(dbgMode==1){ finalColor = vec4(fragColor.rgb, 1.0); return; }            // vertex colours
+  if(dbgMode==2){ finalColor = vec4(texture(texture0, fragTexCoord).rgb, 1.0); return; } // diffuse texture
   vec4 base = texture(texture0, fragTexCoord)*colDiffuse*fragColor;
+  if(dbgMode==3){ finalColor = vec4(base.rgb, 1.0); return; }                 // texture x colour x vertex colour
+  if(dbgMode==4){ finalColor = vec4(vec3(base.a), 1.0); return; }             // alpha (white = solid)
   if(base.a < 0.01) discard;
   vec3 n = normalize(fragNormal); if(!gl_FrontFacing) n = -n;
   vec3 V = normalize(viewPos - fragPos);
@@ -125,14 +130,17 @@ void main(){
     spec += lCol[i]*att*pow(max(dot(n, normalize(Ld+V)),0.0), mix(sp, sp*0.25, wetK))*(specK + wetK*1.6);
   }
   vec3 col = base.rgb*light + spec;
+  if(dbgMode==5){ finalColor = vec4(clamp(light*0.5, 0.0, 1.0), 1.0); return; } // lighting
+  if(dbgMode==6){ finalColor = vec4(clamp(col, 0.0, 1.0), 1.0); return; }      // lit colour, before fog
   float fres = pow(1.0 - max(dot(n,V),0.0), 4.0);
   col = mix(col, skyCol*1.3 + fogCol*0.4, clamp(fres*(0.15 + wetK*0.6 + puddle*0.8), 0.0, 0.7));
   float fd = length(fragPos.xz - fogCenter);
   float f = clamp((fd - fogNear)/(fogFar - fogNear), 0.0, 1.0);
+  if(dbgMode==7){ finalColor = vec4(vec3(f), 1.0); return; }                   // fog amount (black = clear)
   col = mix(col, fogCol, f*f*(3.0-2.0*f));
   col = pow(aces(pow(max(col, vec3(0.0)), vec3(2.2))*exposure), vec3(1.0/2.2)); // filmic curve in linear space
   float lum = dot(col, vec3(0.299,0.587,0.114));
   col = mix(vec3(lum), col, 0.86);                                   // a little drained
   col *= mix(vec3(0.92,0.98,1.06), vec3(1.05,1.0,0.92), smoothstep(0.1,0.7,lum)); // cool shadows, warm highlights
-  finalColor = vec4(col, base.a);
+  finalColor = vec4(col, dbgMode==8 ? 1.0 : base.a);                         // 8: everything, forced solid
 })";
