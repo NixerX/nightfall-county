@@ -56,8 +56,35 @@ static void updateBullets(float dt) {
         }
     }
 }
+static void updateWrecks(float dt) { // smouldering wrecks: smoke as the tell, then they cook off when you get close
+    for (auto& c : carObjs) {
+        if (c.live == 0)
+            continue;
+        float d = Vector2Distance(c.p, P.p);
+        if (d > 70)
+            continue;
+        c.smokeT -= dt;
+        if (c.smokeT <= 0) {
+            c.smokeT = c.live == 2 ? .05f : .35f;
+            Vector2 h = polar(frand(0, 2 * PI), frand(.1f, .5f));
+            parts.push_back({xz3(c.p, 1.1f), V3(h.x, frand(.8f, 1.6f), h.y), frand(2.5f, 4), 4, frand(.4f, .9f),
+                             c.live == 2 ? rgba(40, 40, 44, 220) : rgba(96, 96, 100, 140), P_SMOKE});
+        }
+        if (c.live == 1 && d < 25) {
+            c.live = 2;
+            c.fuse = frand(2, 3);
+            sfxAt(SFX_HISS, c.p, 1, .1f);
+            msg("That wreck is hissing... get back!", rgba(255, 170, 80));
+        } else if (c.live == 2 && (c.fuse -= dt) <= 0) {
+            explode(c.p, 6.25f, 120, 60); // only hurts you inside ~5 m
+            charWreck(c);
+            fires.push_back({c.p, 90});
+        }
+    }
+}
 static void updateWorld(float dt) {
     const float G = 18;
+    updateWrecks(dt);
     if (alarm.on) {
         alarm.t -= dt;
         alarm.beat -= dt;

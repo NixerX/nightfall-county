@@ -24,15 +24,12 @@ static void appendMesh(std::vector<float>& V, std::vector<float>& N, std::vector
         Cc.push_back(255);
     }
 }
-static void buildChunks() {
-    for (int x = 0; x < GN; x++)
-        for (int z = 0; z < GN; z++) {
-            if (chunkHas[x][z])
-                UnloadMesh(chunkMesh[x][z]);
-            chunkHas[x][z] = false;
-        }
-    for (int x = 0; x < GN; x++)
-        for (int z = 0; z < GN; z++) {
+static void buildChunk(int x, int z) { // (re)build one cell's merged mesh
+    if (chunkHas[x][z])
+        UnloadMesh(chunkMesh[x][z]);
+    chunkHas[x][z] = false;
+    {
+        {
             std::vector<float> V, N;
             std::vector<unsigned char> Cc;
             for (int pi : pgrid[x][z]) {
@@ -83,7 +80,7 @@ static void buildChunks() {
                 appendMesh(V, N, Cc, meshes[p.mesh], p);
             }
             if (V.empty())
-                continue;
+                return;
             Mesh m{};
             m.vertexCount = (int)V.size() / 3;
             m.triangleCount = m.vertexCount / 3;
@@ -99,4 +96,19 @@ static void buildChunks() {
             chunkMesh[x][z] = m;
             chunkHas[x][z] = true;
         }
+    }
+}
+static void buildChunks() {
+    for (int x = 0; x < GN; x++)
+        for (int z = 0; z < GN; z++)
+            buildChunk(x, z);
+}
+static void charWreck(CarObj& c) { // a cooked-off car: burned-out shell from now on
+    c.burned = true;
+    c.blew = true;
+    c.live = 0;
+    if (c.prop >= 0) {
+        props[c.prop].c = rgba(70, 58, 50);
+        buildChunk(gcl(props[c.prop].p.x), gcl(props[c.prop].p.z));
+    }
 }

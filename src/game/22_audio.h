@@ -49,6 +49,7 @@ enum SfxId {
     SFX_CAR_DOOR,
     SFX_DOOR_METAL,
     SFX_CAR_ALARM,
+    SFX_HISS,
     SFX_COUNT
 };
 constexpr int ALIASES = 6;
@@ -189,6 +190,12 @@ static void buildAudio() {
             s = Synth(.8f);
             s.tone(0, .7f, 300, 1300, .35f, 1, 2, .05f);
             s.noise(0, .7f, .3f, 3000, 1000, 3);
+            break;
+        case SFX_HISS: // a wreck about to cook off: venting hiss and crackle
+            s = Synth(2.6f);
+            s.noise(0, 2.6f, .32f, 6000, 1800, .4f);
+            for (int i = 0; i < 16; i++)
+                s.noise(frand(.2f, 2.5f), .03f, .55f, 3000, 600, 8);
             break;
         case SFX_CAR_ALARM:
             s = Synth(1.2f);

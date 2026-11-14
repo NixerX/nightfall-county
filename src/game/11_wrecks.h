@@ -83,9 +83,13 @@ static void car(float x, float z, float yaw, float burnP = .25f, int kind = VK_C
     else if (chance(.35f))
         tint = lerpC(tint, rgba(150, 120, 95), frand(.15f, .35f)); // rust and grime
     addAProp(ai, V3(x, 0, z), sc, my, -1, tint);
+    int cprop = (int)props.size() - 1;
     addSolid(x - hx, z - hz, x + hx, z + hz, std::min(2.6f, A.size.y * sc), SK_CAR);
     aoRect(x - hx, z - hz, x + hx, z + hz, 1.2f, .45f);
     carObjs.push_back({V2(x, z), yaw, burn});
+    carObjs.back().prop = cprop;
+    if (!burn && kind != VK_TRACTOR && chance(1 / 12.f))
+        carObjs.back().live = 1; // still smouldering: it can cook off
     if (burn || chance(.25f)) {
         static const char* deb[] = {"vehicles/debris-door", "vehicles/debris-tire", "vehicles/debris-bumper",
                                     "vehicles/debris-plate-a", "vehicles/debris-drivetrain-axle"};

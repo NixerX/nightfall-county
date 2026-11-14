@@ -121,7 +121,7 @@ static void saveGame() {
     o << '\n';
     o << carObjs.size() << '\n';
     for (auto& c : carObjs)
-        o << c.searched << ' ';
+        o << (int)c.searched + 2 * (int)c.blew << ' ';
     o << '\n';
     o << "END\n";
 }
@@ -197,10 +197,13 @@ static bool loadGame() {
     }
     in >> n;
     for (size_t i = 0; i < n && in; i++) {
-        bool v;
+        int v;
         in >> v;
-        if (i < carObjs.size())
-            carObjs[i].searched = v;
+        if (i < carObjs.size()) {
+            carObjs[i].searched = v & 1;
+            if (v & 2)
+                charWreck(carObjs[i]); // it already cooked off
+        }
     }
     in >> tag;
     if (tag != "END") {

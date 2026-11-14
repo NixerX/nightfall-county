@@ -103,6 +103,10 @@ struct CarObj {
     Vector2 p;
     float yaw;
     bool burned, searched = false;
+    int prop = -1; // its model in props (-1: fallback box car)
+    int live = 0;  // 0 inert, 1 smouldering (can cook off), 2 about to blow
+    float fuse = 0, smokeT = 0;
+    bool blew = false; // cooked off this life (saved)
 };
 static std::vector<CarObj> carObjs;
 struct Building {
