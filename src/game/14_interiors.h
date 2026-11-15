@@ -21,6 +21,8 @@ static int cellOf(Vector2 p) {
 static void stairProps(Vector2 p, bool down, int bi,
                        bool horiz) { // down: a dark opening with rails; up: a flight of steps
     Color wood = rgba(110, 82, 58);
+    float ex = horiz ? 1.25f : .55f, ez = horiz ? .55f : 1.25f; // solid: you walk up beside them and press E
+    addSolid(p.x - ex, p.y - ez, p.x + ex, p.y + ez, down ? .6f : 1.3f, SK_FURN, bi);
     if (down) {
         addProp(M_CUBE, V3(p.x, .065f, p.y), horiz ? V3(2.2f, .02f, 1.0f) : V3(1.0f, .02f, 2.2f), 0, rgba(8, 8, 10), bi,
                 L_ALWAYS);
@@ -90,8 +92,11 @@ static int makeCell(int bi, int kind) { // kind 1 upstairs, 2 basement
     for (int t = 0; t < 400; t++) { // a spot that's clear on both floors and not in a doorway
         float rx = frand(1.0f, w - 1.0f), rz = frand(1.0f, d - 1.0f);
         Vector2 a = V2(B.x0 + rx, B.z0 + rz), b = V2(X + rx, Z + rz);
-        float need = t < 200 ? 1.0f : .8f;
-        if (!freeAt(a.x, a.y, need) || !freeAt(b.x, b.y, need))
+        bool hz = chance(.5f);
+        // the whole flight (plus room to stand beside it) must be clear on both floors: furniture, walls,
+        // and the other staircase (stairs are solid, so an upstairs flight and a basement hatch can't overlap)
+        float m = t < 200 ? .5f : .25f, ex = (hz ? 1.25f : .55f) + m, ez = (hz ? .55f : 1.25f) + m;
+        if (!boxFree(a.x - ex, a.y - ez, a.x + ex, a.y + ez) || !boxFree(b.x - ex, b.y - ez, b.x + ex, b.y + ez))
             continue;
         bool nearDoor = false;
         for (auto& dr : blds[bi].doors)
@@ -102,7 +107,6 @@ static int makeCell(int bi, int kind) { // kind 1 upstairs, 2 basement
                 nearDoor = true;
         if (nearDoor)
             continue;
-        bool hz = chance(.5f);
         stairProps(a, kind == 2, bi, hz);
         stairProps(b, kind == 1, cb, hz);
         stairs.push_back({a, b, bi, cb, kind == 2});

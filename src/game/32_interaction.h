@@ -120,10 +120,10 @@ static void takeStairs(int si) {
     Building& tb = blds[toB];
     Vector2 ctr = V2((tb.x0 + tb.x1) / 2, (tb.z0 + tb.z1) / 2);
     Vector2 dir = Vector2Normalize(Vector2Subtract(ctr, to));
-    Vector2 dst = Vector2Add(to, Vector2Scale(dir, 1.5f));
+    Vector2 dst = Vector2Add(to, Vector2Scale(dir, 1.9f)); // just clear of the (solid) stairs
     if (!freeAt(dst.x, dst.y, .35f))
         for (int k = 0; k < 16; k++) {
-            Vector2 q = Vector2Add(to, polar(k * PI / 8, 1.5f));
+            Vector2 q = Vector2Add(to, polar(k * PI / 8, 1.9f));
             if (freeAt(q.x, q.y, .35f)) {
                 dst = q;
                 break;
