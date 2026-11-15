@@ -9,6 +9,10 @@
 - [ ] While it's hissing, the prompt says "It's about to blow!" and the car can't be searched.
 - [ ] Check the re-tint: a cooked-off car should turn into a charred shell with a fire burning on it. The red pickup in the Nov 13 playtest stayed red (might have been a nail bomb instead: Z was selected).
 
+### Packaging
+- [ ] If the assets folder can't be found, show a clear message ("Extract the whole zip first: nightfall.exe needs the assets folder next to it") instead of silently running with box cars and synth sounds. Happens when Windows runs the exe straight from the zip.
+- [ ] macOS: world doesn't draw with the lit shader on Apple Silicon (debug modes NF_DBG=1..8 in place, results pending). Also the window is shorter than its drawing surface (screen 2560x967 vs render 2560x1080), which crops the HUD.
+
 ### Check
 - [ ] Driveways: make sure the dirt/gravel lane from each plot's door to the road is visible (the fence gate gap is there).
 
