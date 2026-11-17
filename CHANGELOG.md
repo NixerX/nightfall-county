@@ -15,6 +15,8 @@
 - Zombies stuck against a fence between you climb over it (slowly, crouched) instead of grinding into it.
 - Settings: Permadeath On/Off. On (default): death deletes your save and quitting always saves. Off: death offers LOAD LAST SAVE.
 - Pause menu: SAVE and QUIT are separate buttons, so you can save as you go.
+- Repairs go by material: rags and sewing kits fix fabric, leather patches fix leather (boots, jackets, gloves, holsters) and reinforce it once it's in good shape, duct tape patches anything up to 75%. Helmets and hard hats only take tape.
+- Cut bushes with any blade for dry sticks (kindling), up to three cuts a bush. First time near a tree with an axe or a bush with a blade, a tip tells you how (chopping trees for logs, and splitting logs into kindling, were already in but never mentioned).
 - Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 

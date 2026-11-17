@@ -246,6 +246,7 @@ static void genWorld() {
     doorObjs.clear();
     lofts.clear();
     covers.clear();
+    bushList.clear();
     carObjs.clear();
     solids.clear();
     props.clear();
@@ -522,6 +523,7 @@ static void genWorld() {
             float bs = frand(.9f, 1.8f);
             if (ba >= 0) {
                 addAProp(ba, V3(p.x, -.05f, p.y), fitScale(ba, bs), frand(0, 6));
+                bushList.push_back({p, bs * .5f});
                 if (bs > 1.2f)
                     covers.push_back({p, bs * .55f});
             }

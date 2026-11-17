@@ -219,19 +219,21 @@ static void melee() {
         if (canChop(P.melee))
             sfx(SFX_CHOP, .6f);
         shake = std::min(.4f, shake + .15f);
-    } else if (canChop(P.melee)) { // nothing alive in reach: chop the nearest tree in front of you
+    } else if (canChop(P.melee) || P.melee == MK_KNIFE || P.melee == MK_MACHETE) {
+        // nothing alive in reach: chop the nearest tree in front of you (axe, hatchet), or cut at a bush (any blade)
         Tree* tb = nullptr;
         float bd = 1e9f;
-        for (int cx = gcl(P.p.x - 4); cx <= gcl(P.p.x + 4); cx++)
-            for (int cz = gcl(P.p.y - 4); cz <= gcl(P.p.y + 4); cz++)
-                for (int ti : tgrid[cx][cz]) {
-                    Tree& t = trees[ti];
-                    float d = Vector2Distance(t.p, P.p), a = atan2f(t.p.y - P.p.y, t.p.x - P.p.x);
-                    if (d < m.range + .5f && fabsf(angDiff(a, P.a)) < m.arc && d < bd) {
-                        bd = d;
-                        tb = &t;
+        if (canChop(P.melee))
+            for (int cx = gcl(P.p.x - 4); cx <= gcl(P.p.x + 4); cx++)
+                for (int cz = gcl(P.p.y - 4); cz <= gcl(P.p.y + 4); cz++)
+                    for (int ti : tgrid[cx][cz]) {
+                        Tree& t = trees[ti];
+                        float d = Vector2Distance(t.p, P.p), a = atan2f(t.p.y - P.p.y, t.p.x - P.p.x);
+                        if (d < m.range + .5f && fabsf(angDiff(a, P.a)) < m.arc && d < bd) {
+                            bd = d;
+                            tb = &t;
+                        }
                     }
-                }
         if (tb) {
             tb->chops++;
             tb->shake = .35f;
@@ -251,6 +253,35 @@ static void melee() {
                 l.rot = frand(0, 6);
                 loot.push_back(l);
                 msg("A log comes loose.", BONE);
+            }
+        } else {
+            Bush* bb = nullptr;
+            float bbd = 1e9f;
+            for (auto& b : bushList) {
+                float d = Vector2Distance(b.p, P.p) - b.r, a = atan2f(b.p.y - P.p.y, b.p.x - P.p.x);
+                if (d < m.range + .3f && d < bbd && (d < .3f || fabsf(angDiff(a, P.a)) < m.arc)) {
+                    bbd = d;
+                    bb = &b;
+                }
+            }
+            if (bb) {
+                sfx(SFX_HIT_SLICE, .6f, .2f);
+                for (int i = 0; i < 8; i++)
+                    parts.push_back({xz3(bb->p, .6f), V3(frand(-2, 2), frand(.5f, 2.5f), frand(-2, 2)), .6f, .6f, .04f,
+                                     rgba(70, 100, 50), P_DUST});
+                if (bb->cut >= 3)
+                    msg("Nothing left on this one but twigs.", STEEL);
+                else if (chance(.6f)) {
+                    bb->cut++;
+                    Loot l;
+                    l.kind = LK_ITEM;
+                    l.id = IT_KINDLING;
+                    l.count = irand(1, 2);
+                    l.p = xz3(Vector2Lerp(bb->p, P.p, .5f), .05f);
+                    l.rot = frand(0, 6);
+                    loot.push_back(l);
+                    msg("Cut some dry sticks.", BONE);
+                }
             }
         }
     }
@@ -537,16 +568,36 @@ static void useItem(InvItem* it) {
         invPrune();
     }
 }
+// what a piece of clothing is made of, from its name: rags and sewing kits fix fabric, leather patches fix leather,
+// duct tape holds anything together (badly); helmets and hard hats only take tape
+enum ClothMat {
+    CM_FABRIC,
+    CM_LEATHER,
+    CM_HARD,
+    CM_RUBBER
+};
+static int clothMat(const Cloth& c) {
+    std::string n = CD[c.def].n;
+    if (n.find("Rubber") != std::string::npos)
+        return CM_RUBBER;
+    if (n.find("Leather") != std::string::npos || n.find("Boots") != std::string::npos ||
+        n.find("Holster") != std::string::npos || n.find("Belt") != std::string::npos)
+        return CM_LEATHER;
+    if (n.find("Helmet") != std::string::npos || n.find("Hard Hat") != std::string::npos || CD[c.def].slot == CS_EYES)
+        return CM_HARD;
+    return CM_FABRIC;
+}
 static bool toolFits(int id, const Cloth& c) { // what a repair/upgrade item can do to a piece of clothing
+    int mt = clothMat(c);
     switch (id) {
     case IT_RAG:
-        return c.cond < .6f && c.cond > 0;
+        return mt == CM_FABRIC && c.cond < .6f && c.cond > 0;
     case IT_SEWKIT:
-        return c.cond < .95f;
+        return mt == CM_FABRIC && c.cond < .95f;
     case IT_TAPE:
         return c.cond < .75f;
-    case IT_LEATHER:
-        return c.upg < 3 && CD[c.def].slot != CS_EYES && CD[c.def].slot != CS_SOCKS;
+    case IT_LEATHER: // repairs leather; once it's in good shape, a patch reinforces it
+        return mt == CM_LEATHER && (c.cond < .95f || c.upg < 3);
     case IT_WAX:
         return c.bWater < .5f && CD[c.def].slot != CS_EYES;
     case IT_DYE_BLACK:
@@ -576,10 +627,14 @@ static void applyTool(InvItem* tool, Cloth& c) {
         msg("Duct-taped the " + n + ". Classy.", OKC);
         break;
     case IT_LEATHER:
-        c.bArmor += .07f;
-        c.upg++;
-        c.cond = std::min(1.f, c.cond + .08f);
-        msg("Sewed leather onto the " + n + ". Harder to bite through.", OKC);
+        if (c.cond < .95f) {
+            c.cond = std::min(.95f, std::max(.05f, c.cond) + .4f);
+            msg("Patched the " + n + " with leather.", OKC);
+        } else {
+            c.bArmor += .07f;
+            c.upg++;
+            msg("Sewed another layer of leather onto the " + n + ". Harder to bite through.", OKC);
+        }
         break;
     case IT_WAX:
         c.bWater = std::min(.5f, c.bWater + .3f);

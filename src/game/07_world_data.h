@@ -100,6 +100,12 @@ struct Cover {
     float r;
 };
 static std::vector<Cover> covers; // tall grass & bushes you can hide in
+struct Bush {                     // every bush: blades cut kindling from it
+    Vector2 p;
+    float r;
+    int cut = 0;
+};
+static std::vector<Bush> bushList;
 struct CarObj {
     Vector2 p;
     float yaw;

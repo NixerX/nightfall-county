@@ -299,6 +299,32 @@ static void updatePlayer(float dt) {
         Vector2 mv = Vector2Scale(P.vel, dt);
         P.p = Vector2Add(P.p, mv);
         P.walked += Vector2Length(mv);
+        { // one-time tips: chopping trees and cutting bushes aren't obvious
+            static bool tipTree = false, tipBush = false;
+            static float tipT = 0;
+            tipT -= dt;
+            if (tipT <= 0) {
+                tipT = .5f;
+                bool chop = canChop(P.melee), blade = chop || P.melee == MK_KNIFE || P.melee == MK_MACHETE;
+                if (chop && !tipTree)
+                    for (int cx = gcl(P.p.x - 2); cx <= gcl(P.p.x + 2) && !tipTree; cx++)
+                        for (int cz = gcl(P.p.y - 2); cz <= gcl(P.p.y + 2) && !tipTree; cz++)
+                            for (int ti : tgrid[cx][cz])
+                                if (Vector2Distance(trees[ti].p, P.p) < 2.2f) {
+                                    msg("Swing at the trunk to chop logs. Use a log with the axe in hand for kindling.",
+                                        BONE);
+                                    tipTree = true;
+                                    break;
+                                }
+                if (blade && !tipBush && !tipTree)
+                    for (auto& b : bushList)
+                        if (Vector2Distance(b.p, P.p) < b.r + 1.2f) {
+                            msg("Swing at a bush to cut dry sticks for kindling.", BONE);
+                            tipBush = true;
+                            break;
+                        }
+            }
+        }
         P.fpT += Vector2Length(mv);
         if (P.fpT > .7f) { // bloody footprints: step in a fresh pool and you track it for a dozen steps
             P.fpT = 0;
