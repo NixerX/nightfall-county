@@ -47,6 +47,7 @@ struct Msg {
 static std::vector<Msg> msgs;
 static Vector2 camPos{MAP / 2, MAP / 2};
 static float camZoom = 1.f;
+static float camLow = 0; // test scenes only: 0 normal camera, 1 low side-on view
 static bool muted = false;
 static int nearLoot = -1;
 static bool uiOpen = false;

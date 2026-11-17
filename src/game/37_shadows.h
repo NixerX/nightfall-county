@@ -1,6 +1,7 @@
 // Nightfall County: shadows.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+static float plDrawYaw = 0; // the player's drawn facing (legs follow movement), set by the main pass
 // ------------------------------------------------------------ sun shadow map
 static RenderTexture2D shadowRT{};
 static int SHADOW_N = 2048;
@@ -78,14 +79,15 @@ static void drawCasters(Vector2 c, float R, bool withPlayer = true) {
     for (auto& z : zombies) {
         if (z.look < 0 || fabsf(z.p.x - c.x) > R || fabsf(z.p.y - c.y) > R || ++n > 50)
             continue;
-        PoseIn pin;
+        PoseIn pin; // the main pass builds the pose; shadows reuse last frame's blended one
         pin.kind = z.type == Z_BRUTE ? PK_BRUTE : PK_ZOMBIE;
         pin.phase = z.walk * 3.6f;
         pin.move = 1;
         pin.seed = z.seed;
         pin.armL = z.armL;
         pin.armR = z.armR;
-        drawCharacter(z.look, pin, z.p, z.a, WHITE, 0, false);
+        pin.useCache = true;
+        drawCharacter(z.look, pin, z.p, z.a, WHITE, 0, crawler(z) ? 1 : 0, nullptr, 1, &z.ps);
     }
     if (withPlayer && state != ST_DEAD && state != ST_TITLE && playerLooks[0] >= 0) {
         PoseIn pin;
@@ -93,7 +95,8 @@ static void drawCasters(Vector2 c, float R, bool withPlayer = true) {
         pin.phase = P.step * 1.85f;
         pin.crouch = P.crouch;
         pin.hold = curGunHold();
-        drawCharacter(outfitLook(), pin, P.p, P.a, WHITE, 0, false);
+        pin.useCache = true;
+        drawCharacter(outfitLook(), pin, P.p, plDrawYaw, WHITE, 0, 0, nullptr, 1, &P.ps);
     }
 }
 static void renderShadows() {

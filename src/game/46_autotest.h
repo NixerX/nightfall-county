@@ -2,9 +2,170 @@
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
 #ifdef NF_AUTOTEST
+// ---- NF_SCENE=anim / gore: close-up test scenes for character animation and gore (screenshots to lab_*.png)
+static Vector2 labSpot() { // open ground: no buildings, trees or roads nearby
+    for (int i = 0; i < 4000; i++) {
+        Vector2 p = V2(frand(100, MAP - 100), frand(100, MAP - 100));
+        if (townAt(p, 1.6f) >= 0 || roadDist(p) < 10 || buildingAt(p) >= 0)
+            continue;
+        bool ok = true;
+        for (float x = -12; x <= 12 && ok; x += 1.5f)
+            for (float z = -12; z <= 12 && ok; z += 1.5f)
+                if (pointSolid(p.x + x, p.y + z, 0) || buildingAt(V2(p.x + x, p.y + z)) >= 0)
+                    ok = false;
+        if (ok)
+            return p;
+    }
+    return V2(MAP / 2, MAP / 2);
+}
+static void labShot(const char* n, int i) {
+    char b[64];
+    snprintf(b, sizeof b, "lab_%s_%02d.png", n, i);
+    TakeScreenshot(b);
+}
+static void animLab(int f) {
+    static Vector2 o;
+    static int brute = -1;
+    P.hp = P.perks.maxhp;
+    P.iframe = 1;
+    P.sta = 100;
+    if (f < 170)
+        for (auto& z : zombies) { // the idle one mustn't spot you (it would cancel autorun)
+            z.notice = 0;
+            z.sees = false;
+            z.aggro = 0;
+            z.ignoreT = 5;
+        }
+    if (f == 25) {
+        newGame();
+        o = labSpot();
+        P.p = o;
+        camPos = P.p;
+        gTime = CYCLE * .2f;
+        zombies.clear();
+        corpses.clear();
+        camZoom = 4.2f;
+        camLow = .55f;
+        Zombie& a = spawnZ(Z_WALKER, Vector2Add(o, V2(2.5f, -1.5f))); // stands idle
+        a.spd = 0;
+        a.a = PI;
+    }
+    if (f >= 30 && f < 70) { // walk east past the camera
+        P.autorun = true;
+        P.autoA = 0;
+        P.a = 0;
+        P.crouch = false;
+    }
+    if (f >= 40 && f < 66 && f % 2 == 0)
+        labShot("walk", (f - 40) / 2);
+    if (f == 38) {
+        float cl = camLow, cz = camZoom;
+        camLow = 0;
+        camZoom = 1.5f;
+        (void)cl;
+        (void)cz;
+    }
+    if (f == 39)
+        labShot("dbg", 0);
+    if (f == 40) {
+        camLow = .55f;
+        camZoom = 4.2f;
+    }
+    if (f == 41)
+        printf("LAB p=%.1f,%.1f o=%.1f,%.1f state=%d cam=%.1f,%.1f loft=%d hp=%.0f vel=%.2f crouch=%d auto=%d\n", P.p.x,
+               P.p.y, o.x, o.y, (int)state, camPos.x, camPos.y, P.loft, P.hp, Vector2Length(P.vel), P.crouch,
+               P.autorun);
+    if (f == 70) {
+        P.autorun = false;
+        P.perks.speed = 1.85f; // as fast as a sprint
+    }
+    if (f >= 80 && f < 110) {
+        P.autorun = true;
+        P.autoA = PI;
+        P.a = PI;
+        P.crouch = false;
+    }
+    if (f >= 92 && f < 108 && f % 2 == 0)
+        labShot("sprint", (f - 92) / 2);
+    if (f == 110) {
+        P.autorun = false;
+        P.perks.speed = 1;
+    }
+    if (f == 140)
+        labShot("idle", 0);
+    if (f == 160)
+        labShot("idle", 1);
+    if (f == 170) { // zombies coming at you
+        zombies.clear();
+        P.p = o;
+        for (int i = 0; i < 4; i++) {
+            Zombie& z = spawnZ(i == 3 ? Z_RUNNER : Z_WALKER, Vector2Add(o, V2(6 + i * .9f, -3 + i * 2)));
+            z.aggro = 30;
+            z.sees = true;
+            z.seed = 1 + i * .37f; // seeds 1.37/1.74 drag
+        }
+        Zombie& b = spawnZ(Z_BRUTE, Vector2Add(o, V2(-9, 0)));
+        b.aggro = 30;
+        brute = b.id;
+        camZoom = 2.6f;
+        camLow = .35f;
+    }
+    if (f >= 175 && f < 215 && f % 4 == 0)
+        labShot("chase", (f - 175) / 4);
+    if (f >= 215 && f < 270 && f % 3 == 0) { // shoot them: knock-back, falls
+        int best = -1;
+        float bd = 1e9;
+        for (int i = 0; i < (int)zombies.size(); i++)
+            if (!zombies[i].dead && zombies[i].type != Z_BRUTE) {
+                float d = Vector2Distance(zombies[i].p, P.p);
+                if (d < bd) {
+                    bd = d;
+                    best = i;
+                }
+            }
+        if (best >= 0)
+            hurtZ(zombies[best], 25, f % 9 == 0, atan2f(zombies[best].p.y - P.p.y, zombies[best].p.x - P.p.x), false);
+    }
+    if (f >= 215 && f < 300 && f % 3 == 0)
+        labShot("kill", (f - 215) / 3);
+    if (f == 310)
+        labShot("down", 0);
+    if (f == 320) { // crawler
+        zombies.clear();
+        corpses.clear();
+        decals.clear();
+        gibs.clear();
+        P.p = Vector2Add(o, V2(20, 0));
+        Zombie& z = spawnZ(Z_WALKER, Vector2Add(P.p, V2(3.5f, 0)));
+        z.cut[3] = 1;
+        z.aggro = 30;
+        z.sees = true;
+        z.a = PI;
+        camZoom = 4;
+        camLow = .45f;
+    }
+    if (f >= 325 && f < 365 && f % 3 == 0)
+        labShot("crawl", (f - 325) / 3);
+    if (f == 400) {
+        CloseWindow();
+        exit(0);
+    }
+}
+static void goreLab(int f);
+#endif
+#ifdef NF_AUTOTEST
 static int atFrame = 0;
 static void autotest() {
     atFrame++;
+    if (getenv("NF_SCENE")) {
+        if (atFrame == 20)
+            SetWindowSize(1280, 720);
+        if (!strcmp(getenv("NF_SCENE"), "anim"))
+            animLab(atFrame);
+        else
+            goreLab(atFrame);
+        return;
+    }
     if (getenv("NF_JUMP") && atFrame == 26)
         atFrame = atoi(getenv("NF_JUMP"));
     int f = atFrame;
@@ -896,5 +1057,8 @@ static void autotest() {
         CloseWindow();
         exit(0);
     }
+}
+static void goreLab(int f) {
+    animLab(f);
 }
 #endif

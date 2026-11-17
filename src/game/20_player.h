@@ -48,5 +48,11 @@ struct Player {
     float rmbT = 0, shoveCd = 0, vaultT = 0, vaultH = 0;
     Vector2 vaultA{}, vaultB{};
     float animA = 0;
+    PoseState ps;    // blended pose
+    float hurtA = 0; // direction the last hit shoved you
+    float turnV = 0; // how fast the legs are turning (rad/s)
+    int fpStep = 0;  // bloody footprints left to lay
+    float fpT = 0;
+    Color fpC{};
 };
 static Player P;

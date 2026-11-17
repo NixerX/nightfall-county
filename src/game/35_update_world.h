@@ -344,6 +344,17 @@ static void update(float dt) {
     P.alive += 0;
     shake = std::max(0.f, shake - dt * 2);
     groanCd -= dt;
+    for (auto& c : corpses) // bodies topple over; a thud and some dust when they land
+        if (c.fall < 1) {
+            c.fall = std::min(1.f, c.fall + dt / (c.fallKind == 2 ? .85f : .6f));
+            if (c.fall >= 1) {
+                for (int k = 0; k < 5; k++)
+                    parts.push_back({xz3(c.p, .05f), V3(frand(-1.2f, 1.2f), .4f, frand(-1.2f, 1.2f)), .5f, .5f, .3f,
+                                     rgba(90, 80, 70, 110), P_DUST});
+                if (Vector2Distance(c.p, P.p) < 25)
+                    sfxAt(SFX_STEP, c.p, .6f, .1f);
+            }
+        }
     if (banner.t > 0)
         banner.t -= dt;
     char ph = isNight() ? 'n' : 'd';
@@ -443,7 +454,8 @@ static void update(float dt) {
                   zombies.end());
     Vector2 ap = aimPoint();
     Vector2 lead = Vector2Scale(V2(Clamp(ap.x - P.p.x, -12, 12), Clamp(ap.y - P.p.y, -9, 9)), .28f);
-    camPos = Vector2Lerp(camPos, Vector2Add(P.p, lead), 1 - powf(.002f, dt));
+    camPos =
+        camLow > 0 ? P.p : Vector2Lerp(camPos, Vector2Add(P.p, lead), 1 - powf(.002f, dt)); // test scenes: locked on
     if (pendingLv > 0 && state == ST_PLAY)
         grantLevelPoints();
 }

@@ -1,6 +1,48 @@
 // Nightfall County: render world.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+// zombie pose inputs from its state (shared by the main and shadow passes)
+static void zombiePose(const Zombie& z, PoseIn& pin) {
+    bool fast = (z.type == Z_RUNNER || z.type == Z_VOLATILE) && (z.sees || z.aggro > 0 || z.noiseT > 0);
+    pin.kind = crawler(z) ? PK_CRAWL : z.type == Z_BRUTE ? PK_BRUTE : fast ? PK_RUNNER : PK_ZOMBIE;
+    pin.phase = z.walk * (pin.kind == PK_CRAWL ? 4.5f : fast ? 2.4f : 3.6f);
+    pin.move = Clamp(z.vNow / .5f, 0, 1) * (fast ? 1.5f : 1);
+    pin.seed = z.seed;
+    pin.time = (float)GetTime();
+    pin.armL = z.armL;
+    pin.armR = z.armR;
+    for (int k = 0; k < 4; k++)
+        pin.cut[k] = z.cut[k];
+    pin.stagger = z.stun > 0 || z.stumble > 0 ? 1 : 0;
+    pin.turn = z.turnV;
+    pin.hp = z.mhp > 0 ? z.hp / z.mhp : 1;
+    pin.drag = zDrag(z.type, z.seed);
+    pin.alert = z.sees || z.chasing || z.aggro > 0 || z.lureT > 0 ? 1.f : z.noiseT > 0 ? .55f : 0.f;
+    if (z.pound >= 0)
+        pin.pound = Clamp(1 - z.atk / .55f, 0, 1) * .5f;
+    else if (z.atk < .3f)
+        pin.attack = 1 - z.atk / .3f;
+    if (z.type == Z_BRUTE && z.chgW > 0)
+        pin.crouch = .35f; // wind-up: drops low before the charge
+    if (z.hitT > 0) {      // shoved by the last hit
+        float rel = z.hitA - z.a, k = Clamp(z.hitT / .3f, 0, 1) * z.hitK;
+        pin.hitZ = cosf(rel) * k;
+        pin.hitX = -sinf(rel) * k;
+    }
+}
+// bloody stumps where limbs came off
+static void drawStumps(const CharOut& co, const signed char* cut, bool armL, bool armR) {
+    const Color sc = rgba(130, 12, 18);
+    for (int sd = 0; sd < 2; sd++) {
+        int ca = cut[sd];
+        if (ca == 0 && !(sd ? armR : armL))
+            ca = 1;
+        if (ca)
+            drawMeshM(M_SPHERE, TRS(ca == 2 ? co.shoulder[sd] : co.elbow[sd], V3(.1f, .1f, .1f), 0), sc);
+        if (cut[2 + sd])
+            drawMeshM(M_SPHERE, TRS(cut[2 + sd] == 2 ? co.hip[sd] : co.knee[sd], V3(.11f, .11f, .11f), 0), sc);
+    }
+}
 static void renderWorld3D() {
     float vr = 48 / camZoom;
     Vector2 c = state == ST_TITLE ? camPos : camPos;
@@ -259,7 +301,7 @@ static void renderWorld3D() {
     {
         int drawn = 0;
         for (int ci = (int)corpses.size() - 1; ci >= 0; ci--) {
-            const Corpse& cp = corpses[ci];
+            Corpse& cp = corpses[ci];
             if (cp.look < 0 || !haveChars || !vis(cp.p.x, cp.p.y, 3))
                 continue;
             if (++drawn > 70)
@@ -270,7 +312,33 @@ static void renderWorld3D() {
             pin.armL = cp.armL;
             pin.armR = cp.armR;
             pin.head = cp.head;
-            drawCharacter(cp.look, pin, cp.p, cp.yaw + PI, rgba(40, 30, 26), .3f, true);
+            pin.noUpper = cp.noUpper;
+            pin.time = (float)GetTime();
+            for (int k = 0; k < 4; k++)
+                pin.cut[k] = cp.cut[k];
+            float side = cp.fallKind == 1 ? -1.f : 1.f, yawF = cp.yaw + PI, lie = side, yaw = yawF;
+            if (cp.fall < 1) { // toppling: turns from where it faced, tips over its feet, gravity speeds it up
+                float f = Clamp(cp.fall, 0, 1), tip = f;
+                if (cp.fallKind == 2) { // crumple: knees give first, then it pitches over
+                    tip = Clamp((f - .4f) / .6f, 0, 1);
+                    if (f < .4f) {
+                        pin.kind = PK_ZOMBIE;
+                        pin.crouch = f / .4f * .8f;
+                        pin.stagger = 1;
+                        pin.time = 0;
+                    }
+                } else if (f < .12f) {
+                    pin.kind = PK_ZOMBIE;
+                    pin.stagger = 1;
+                }
+                lie = side * std::max(.001f, tip * tip);
+                yaw = cp.yaw0 + angDiff(yawF, cp.yaw0) * std::min(1.f, f * 2);
+            }
+            CharOut co;
+            drawCharacter(cp.look, pin, cp.p, yaw, rgba(40, 30, 26), .3f * cp.fall, lie, &co, 1,
+                          cp.ps.init || cp.fall < 1 ? &cp.ps : nullptr, cp.wnd);
+            if (cp.cut[0] || cp.cut[1] || cp.cut[2] || cp.cut[3])
+                drawStumps(co, cp.cut, cp.armL, cp.armR);
         }
     }
     for (auto& cp : corpses) {
@@ -292,26 +360,13 @@ static void renderWorld3D() {
         const ZDef& t = ZT[z.type];
         if (z.look >= 0 && haveChars) {
             PoseIn pin;
-            bool fast = (z.type == Z_RUNNER || z.type == Z_VOLATILE) && (z.sees || z.aggro > 0 || z.noiseT > 0);
-            pin.kind = z.type == Z_BRUTE ? PK_BRUTE : fast ? PK_RUNNER : PK_ZOMBIE;
-            pin.phase = z.walk * (fast ? 2.4f : 3.6f);
-            pin.move = fast ? 1.5f : 1;
-            pin.seed = z.seed;
-            pin.armL = z.armL;
-            pin.armR = z.armR;
-            pin.stagger = z.stun > 0 ? 1 : 0;
-            if (z.atk < .3f)
-                pin.attack = 1 - z.atk / .3f;
+            zombiePose(z, pin);
             Color tc = z.flash > 0 ? WHITE : z.burn > 0 ? rgba(255, 120, 40) : z.job ? JOBC[z.job] : WHITE;
             float ta = z.flash > 0 ? .7f : z.burn > 0 ? .35f : z.job ? .5f : 0;
             CharOut co;
-            drawCharacter(z.look, pin, z.p, z.a, tc, ta, false, &co);
-            if (!z.armL || !z.armR)
-                for (int sd = 0; sd < 2; sd++)
-                    if (!(sd ? z.armR : z.armL)) {
-                        Vector3 sp = Vector3Lerp(co.chest, co.hand[sd], .18f);
-                        drawMeshM(M_SPHERE, TRS(sp, V3(.11f, .11f, .11f), 0), rgba(130, 12, 18));
-                    }
+            bool crawl = pin.kind == PK_CRAWL;
+            drawCharacter(z.look, pin, z.p, z.a, tc, ta, crawl ? 1 : 0, &co, 1, &z.ps, z.wnd);
+            drawStumps(co, z.cut, z.armL, z.armR);
             continue;
         }
         Color tint = z.flash > 0 ? rgba(255, 255, 255) : z.burn > 0 ? rgba(255, 150, 110) : WHITE;
@@ -338,10 +393,11 @@ static void renderWorld3D() {
             PoseIn pin;
             pin.kind = PK_PLAYER;
             pin.phase = P.step * 1.85f;
-            float spd = Vector2Length(P.k) > 3 ? 0 : 1;
-            (void)spd;
-            bool moving = P.moving; // real movement, so click-to-move and autorun animate the legs too
-            pin.move = !moving ? 0 : P.sprint ? 1.9f : P.crouch ? .6f : 1;
+            bool moving = P.moving;                 // real movement, so click-to-move and autorun animate the legs too
+            pin.move = Vector2Length(P.vel) / 3.4f; // 1 = walking, ~1.85 sprinting
+            if (pin.move < .08f)
+                pin.move = 0;
+            pin.time = (float)GetTime();
             pin.crouch = P.crouch ? 1 : 0;
             pin.hold = g ? (g->slot == 1 ? 1 : 2) : 0;
             pin.swing = P.swing > 0 ? swingT : -1;
@@ -354,7 +410,7 @@ static void renderWorld3D() {
             float yaw = P.a;
             if (P.roll > 0)
                 yaw = atan2f(P.rv.y, P.rv.x);
-            else if (pin.move > 0) {
+            else if (moving || pin.move > .3f) {
                 P.animA +=
                     angDiff(P.moveA, P.animA) *
                     std::min(
@@ -372,6 +428,18 @@ static void renderWorld3D() {
                 }
             } else
                 P.animA = P.a;
+            {
+                static float lastYaw = 0;
+                float fdt = std::max(.001f, GetFrameTime());
+                P.turnV += (Clamp(angDiff(yaw, lastYaw) / fdt, -8, 8) - P.turnV) * std::min(1.f, fdt * 10);
+                lastYaw = yaw;
+                pin.turn = P.turnV;
+            }
+            if (P.hurt > 0) { // shoved the way the hit came
+                float rel = P.hurtA - yaw, k = Clamp(P.hurt / .35f, 0, 1) * .9f;
+                pin.hitZ = cosf(rel) * k;
+                pin.hitX = -sinf(rel) * k;
+            }
             if (P.vaultT > 0) {
                 float t = 1 - P.vaultT / .45f;
                 yaw = atan2f(P.vaultB.y - P.vaultA.y, P.vaultB.x - P.vaultA.x);
@@ -385,7 +453,8 @@ static void renderWorld3D() {
             if (P.kickT > 0)
                 pin.kick = 1 - P.kickT / .35f;
             pin.guard = P.blocking;
-            drawCharacter(pl, pin, P.p, yaw, rgba(255, 60, 60), P.hurt > 0 ? .35f : 0, false, &co);
+            plDrawYaw = yaw;
+            drawCharacter(pl, pin, P.p, yaw, rgba(255, 60, 60), P.hurt > 0 ? .35f : 0, 0, &co, 1, &P.ps);
             if (P.shieldHP > 0 && P.roll <= 0) {
                 Vector3 hp = Vector3Add(co.hand[0], xz3(polar(P.a, P.blocking ? .2f : .05f), 0));
                 if (!P.blocking)

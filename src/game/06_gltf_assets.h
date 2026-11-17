@@ -303,8 +303,7 @@ makeLook(int ai, int kind) { // kind: 0 survivor, 1 zombie, 2 volatile, 3 bloate
     float h = 1.8f / std::max(.5f, a.size.y);
     L.female = hasStr(CHAR_KEYS[0], "") && a.rig.names.size() > 49;
     L.scale = V3(h, h, h);
-    if (kind ==
-        0) { // classify clothing materials by where their vertices sit on the body so worn clothes can recolor them
+    { // classify clothing materials by where their vertices sit on the body (worn clothes recolour them, wounds stain them)
         L.zone.assign(L.col.size(), 0);
         std::vector<double> sy(L.col.size(), 0);
         std::vector<int> cnt(L.col.size(), 0);
@@ -327,6 +326,8 @@ makeLook(int ai, int kind) { // kind: 0 survivor, 1 zombie, 2 volatile, 3 bloate
             float my = (float)(sy[i] / cnt[i]);
             L.zone[i] = my > .55f && my < .86f ? 1 : my > .14f && my <= .55f ? 2 : my <= .14f ? 3 : 0;
         }
+    }
+    if (kind == 0) {
         L.col0 = L.col;
         return L;
     }
@@ -413,27 +414,52 @@ static void buildLooks() {
     }
 }
 struct CharOut {
-    Vector3 hand[2], head, chest;
+    Vector3 hand[2], head, chest, elbow[2], shoulder[2], knee[2], hip[2];
     Matrix M;
 };
 static float charY = 0;
-static int outfitLook(); // applies worn clothes to the player look
-static void drawCharacter(int lookIdx, const PoseIn& pin, Vector2 pos, float yaw, Color tint, float tintAmt, bool lying,
-                          CharOut* out = nullptr, float alpha = 1) {
+static unsigned poseFrame = 1; // bumped once per rendered frame: each character blends its pose once per frame
+static int outfitLook();       // applies worn clothes to the player look
+// lie: 0 standing, 1 lying face down (head toward yaw), -1 lying face up (head away from yaw); in between = falling.
+// A lying body is centred on pos; a falling one pivots on its feet, which sit .88 behind (or ahead of) pos.
+static void drawCharacter(int lookIdx, const PoseIn& pin, Vector2 pos, float yaw, Color tint, float tintAmt, float lie,
+                          CharOut* out = nullptr, float alpha = 1, PoseState* ps = nullptr,
+                          const float* wnd = nullptr) {
     Look& L = looks[lookIdx];
     Asset& a = assets[L.asset];
-    std::vector<Quaternion> D;
-    std::vector<float> S;
-    Vector3 ro = buildPose(a.rig, pin, D, S);
-    solvePose(a.rig, D, S, ro, a.fp);
+    static std::vector<Quaternion> D;
+    static std::vector<float> S;
+    Vector3 ro;
+    if (ps && pin.useCache && !ps->init)
+        ps = nullptr; // nothing blended yet: draw this one unblended, leave the state to the main pass
+    if (ps && ps->init && (pin.useCache || ps->frame == poseFrame) && ps->D.size() == a.rig.bind.size()) {
+        solvePose(a.rig, ps->D, ps->S, ps->root, a.fp);
+    } else {
+        ro = buildPose(a.rig, pin, D, S);
+        if (ps) {
+            blendPose(*ps, D, S, ro, std::min(.05f, std::max(.001f, GetFrameTime())), 14);
+            ps->frame = poseFrame;
+            solvePose(a.rig, ps->D, ps->S, ps->root, a.fp);
+        } else
+            solvePose(a.rig, D, S, ro, a.fp);
+    }
     UpdateModelAnimationBones(a.m, a.anim, 0);
     Matrix M = MatrixMultiply(MatrixMultiply(MatrixScale(L.scale.x, L.scale.y, L.scale.z), MatrixRotateY(PI / 2 - yaw)),
                               MatrixTranslate(pos.x, charY, pos.y));
-    if (lying)
-        M = MatrixMultiply(MatrixMultiply(MatrixRotateX(PI / 2), MatrixTranslate(0, .13f / L.scale.y, -.88f)), M);
+    if (lie != 0) {
+        float th = lie * PI / 2, side = lie > 0 ? 1.f : -1.f;
+        M = MatrixMultiply(
+            MatrixMultiply(MatrixRotateX(th), MatrixTranslate(0, .13f / L.scale.y * fabsf(sinf(th)), -.88f * side)), M);
+    }
     for (int i = 0; i < a.m.meshCount; i++) {
         int mi = a.m.meshMaterial[i];
         Color c = L.col[mi];
+        if (wnd && mi < (int)L.zone.size()) { // blood soaked where it's been hit
+            int zn = L.zone[mi];
+            float w = zn == 1 ? wnd[1] : zn >= 2 ? wnd[2] : std::max(wnd[0], wnd[1] * .4f);
+            if (w > 0)
+                c = lerpC(c, rgba(84, 8, 12), std::min(.7f, w * .7f));
+        }
         if (tintAmt > 0)
             c = lerpC(c, tint, tintAmt);
         c.a = (unsigned char)(255 * alpha);
@@ -441,10 +467,18 @@ static void drawCharacter(int lookIdx, const PoseIn& pin, Vector2 pos, float yaw
         DrawMesh(a.m.meshes[i], a.m.materials[mi], MatrixMultiply(a.m.transform, M));
     }
     if (out) {
-        for (int s = 0; s < 2; s++)
-            out->hand[s] = a.rig.hand[s] >= 0 ? Vector3Transform(a.fp[a.rig.hand[s]].translation, M) : xz3(pos, 1.2f);
-        out->head = a.rig.head >= 0 ? Vector3Transform(a.fp[a.rig.head].translation, M) : xz3(pos, 1.7f);
-        out->chest = a.rig.chest >= 0 ? Vector3Transform(a.fp[a.rig.chest].translation, M) : xz3(pos, 1.4f);
+        auto bp = [&](int b, Vector3 dflt) {
+            return b >= 0 ? Vector3Transform(a.fp[b].translation, M) : dflt;
+        };
+        for (int s = 0; s < 2; s++) {
+            out->hand[s] = bp(a.rig.hand[s], xz3(pos, 1.2f));
+            out->elbow[s] = bp(a.rig.la[s], xz3(pos, 1.3f));
+            out->shoulder[s] = bp(a.rig.ua[s], xz3(pos, 1.45f));
+            out->knee[s] = bp(a.rig.ll[s], xz3(pos, .5f));
+            out->hip[s] = bp(a.rig.ul[s], xz3(pos, .9f));
+        }
+        out->head = bp(a.rig.head, xz3(pos, 1.7f));
+        out->chest = bp(a.rig.chest, xz3(pos, 1.4f));
         out->M = M;
     }
 }

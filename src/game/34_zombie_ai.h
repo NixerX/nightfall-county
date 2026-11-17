@@ -60,6 +60,25 @@ static float doorMul(int t) {
         return .6f;
     }
 } // how hard each type hits a door
+// how fast each type can turn (rad/s): walkers are slow to come about, so you can juke them; brutes are slower
+static float turnRate(const Zombie& z) {
+    if (crawler(z))
+        return 2.f;
+    switch (z.type) {
+    case Z_RUNNER:
+        return 6.5f;
+    case Z_VOLATILE:
+        return 10.f;
+    case Z_BRUTE:
+        return 1.7f;
+    case Z_BLOATER:
+        return 2.f;
+    case Z_SOLDIER:
+        return 3.f;
+    default:
+        return 2.6f;
+    }
+}
 static void updateZombies(float dt) {
     for (auto& c : zg)
         for (auto& v : c)
@@ -77,6 +96,7 @@ static void updateZombies(float dt) {
         z.flash -= dt;
         z.stun -= dt;
         z.slow -= dt;
+        z.hitT -= dt;
         z.aggro -= dt;
         z.lureT -= dt;
         z.losT -= dt;
@@ -337,10 +357,40 @@ static void updateZombies(float dt) {
                 shake = std::min(.5f, shake + .15f);
             }
         }
-        z.a = ang;
+        { // turning takes time; they shuffle slowly while coming about (not while a brute is mid-charge)
+            float df = angDiff(ang, z.a), mx = turnRate(z) * dt, st = Clamp(df, -mx, mx);
+            z.a += st;
+            z.turnV += (st / std::max(dt, 1e-4f) - z.turnV) * std::min(1.f, dt * 8);
+            if (!(z.type == Z_BRUTE && z.chgT > 0))
+                sp *= 1 - .7f * Clamp((fabsf(df) - .35f) / 1.4f, 0, 1);
+        }
+        if (z.type == Z_WALKER || z.type == Z_SOLDIER) { // shamble: surges with each step, draggers are slower
+            float dr = zDrag(z.type, z.seed);
+            sp *= (1 + (.3f + .2f * dr) * sinf(z.walk * 7.2f + 1.2f)) * (1 - .15f * dr);
+        }
+        if (z.type == Z_RUNNER && chase && z.stumble <= 0 && chance(dt * .06f))
+            z.stumble = .55f; // trips over its own feet
+        if (z.stumble > 0) {
+            z.stumble -= dt;
+            sp *= .35f;
+        }
+        if (crawler(z))
+            sp *= z.type == Z_RUNNER ? .25f : .45f;
         Vector2 mv = polar(ang, sp * dt);
         z.p = Vector2Add(z.p, mv);
-        z.walk += Vector2Length(mv);
+        float wl = Vector2Length(mv);
+        z.walk += wl;
+        z.vNow += (wl / std::max(dt, 1e-4f) - z.vNow) * std::min(1.f, dt * 10);
+        if (z.type == Z_BRUTE && d < 14) { // heavy footfalls you can feel
+            float stepL = PI / 3.6f;
+            if (floorf(z.walk / stepL) != floorf((z.walk - wl) / stepL)) {
+                shake = std::min(.35f, shake + .07f * (1 - d / 14));
+                sfxAt(SFX_STEP, z.p, .9f, .1f);
+                for (int k = 0; k < 3; k++)
+                    parts.push_back({xz3(z.p, .05f), V3(frand(-1, 1), .3f, frand(-1, 1)), .5f, .5f, .3f,
+                                     rgba(90, 80, 70, 120), P_DUST});
+            }
+        }
         z.p = Vector2Add(z.p, Vector2Scale(z.k, dt));
         z.k = Vector2Scale(z.k, powf(.002f, dt));
         for (int o : zNear(z.p)) {
@@ -389,10 +439,18 @@ static void updateZombies(float dt) {
             collide(z.p, z.r);
             continue;
         }
+        bool facing = fabsf(angDiff(atan2f(dz, dx), z.a)) < 1.3f || d < z.r + .2f; // has to be turned toward you
         if (d < z.r + .35f + .35f && P.roll <= 0 && P.loft < 0 && !(z.type == Z_BRUTE && (z.stun > 0 || z.chgW > 0)) &&
-            !wallBetween(z.p, P.p)) {
+            facing && !wallBetween(z.p, P.p)) {
             z.atk -= dt;
-            if (z.atk <= 0) {
+            if (z.atk <= 0 && crawler(z)) { // grabs your ankle from the ground
+                z.atk = 1.1f;
+                sfxAt(SFX_ZATTACK, z.p, .7f, .15f);
+                hitPlayer(z.dmg * .6f, z.p, z.type);
+                P.vel = Vector2Scale(P.vel, .2f);
+                if (chance(.4f))
+                    msg("It grabbed your ankle!", BLOODC);
+            } else if (z.atk <= 0) {
                 z.atk = z.type == Z_VOLATILE ? .6f : .95f;
                 if (chance(.45f))
                     sfxAt(z.type == Z_BRUTE      ? SFX_ROAR

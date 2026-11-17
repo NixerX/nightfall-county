@@ -270,7 +270,7 @@ int main() {
         Vector3 tgt = V3(camPos.x + shx, 0, camPos.y + shz);
         float dist = 27.f / camZoom;
         cam3.target = Vector3Add(tgt, V3(0, .8f, 0));
-        cam3.position = Vector3Add(tgt, V3(0, dist * .86f, dist * .52f));
+        cam3.position = Vector3Add(tgt, V3(0, dist * (.86f - .6f * camLow), dist * (.52f + .42f * camLow)));
         cam3.up = V3(0, 1, 0);
         cam3.fovy = 42;
         cam3.projection = CAMERA_PERSPECTIVE;
@@ -281,6 +281,7 @@ int main() {
         computeFades(dt);
         BeginDrawing();
         setupLighting(cam3.position);
+        poseFrame++;
         renderShadows();
         renderFlashShadow();
         Vector3 fogC = Vector3Lerp(V3(.55f, .58f, .6f), V3(.006f, .008f, .014f), darkK());

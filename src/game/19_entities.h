@@ -55,7 +55,26 @@ struct Zombie {
     bool chasing = false;
     int pound = -1;
     float poundT = 0, ignoreT = 0; // horde marchers: 0 marching, 1 searching your last known spot
+    // animation and gore
+    PoseState ps;                       // blended pose
+    float hitT = 0, hitA = 0, hitK = 0; // last hit: time left, direction it pushed, strength
+    float turnV = 0;                    // how fast it's turning (rad/s), for leaning into turns
+    float vNow = 0;                     // actual speed (m/s), smoothed
+    float stumble = 0;                  // runners: tripping
+    signed char cut[4] = {0, 0, 0, 0};  // arm L, arm R, leg L, leg R: 0 whole, 1 below the joint, 2 at the root
+    float wnd[3] = {0, 0, 0};           // blood soaked: head, torso, legs (0..1)
 };
+// crawlers: lost a leg
+static bool crawler(const Zombie& z) {
+    return z.cut[2] || z.cut[3];
+}
+// dragged-foot limp, from the zombie's seed (about a third of walkers and soldiers)
+static float zDrag(int type, float seed) {
+    if (type != Z_WALKER && type != Z_SOLDIER)
+        return 0;
+    float f = seed * 7.13f - floorf(seed * 7.13f);
+    return f < .33f ? .5f + f * 1.5f : 0;
+}
 struct Corpse {
     Vector2 p;
     float yaw;
@@ -64,6 +83,13 @@ struct Corpse {
     float t;
     int look = -1;
     float seed = 0;
+    float fall = 1;   // 0..1 toppling over (1 = down); kills start at 0, scenery corpses are already down
+    float yaw0 = 0;   // facing at the moment of death (the body turns from this to yaw as it falls)
+    int fallKind = 0; // 0 forward onto its face, 1 back onto its back, 2 crumple (knees first)
+    signed char cut[4] = {0, 0, 0, 0};
+    bool noUpper = false;     // only the legs and hips are left
+    float wnd[3] = {0, 0, 0}; // blood soaked: head, torso, legs
+    PoseState ps;
 };
 enum PKind {
     P_BLOOD,

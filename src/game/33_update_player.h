@@ -220,8 +220,11 @@ static void updatePlayer(float dt) {
         Vector2 mv = Vector2Scale(P.vel, dt);
         P.p = Vector2Add(P.p, mv);
         P.walked += Vector2Length(mv);
+        { // walk cycle from the real speed, so the feet plant instead of skating; longer strides when sprinting
+            float v = Vector2Length(P.vel);
+            P.step += dt * v * (1 - .2f * Clamp((v / 3.4f - 1.1f) / .7f, 0, 1));
+        }
         if (il > 0) {
-            P.step += dt * sp;
             noiseR = (P.sprint ? 22.f : P.crouch ? 2.5f : 9.f) * P.perks.noise * gear().noise;
             stepT -= dt * sp;
             if (stepT <= 0) {

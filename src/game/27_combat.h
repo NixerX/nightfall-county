@@ -69,6 +69,8 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
     if (srcType >= 0 && srcType < 99)
         wearDamage(dmg);
     P.hurt = .35f;
+    if (Vector2DistanceSqr(P.p, src) > 1e-4f)
+        P.hurtA = atan2f(P.p.y - src.y, P.p.x - src.x);
     P.iframe = .15f;
     shake = std::min(.6f, shake + .25f);
     P.pain = std::max(P.pain, 20.f);
@@ -94,11 +96,29 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
     if (P.hp <= 0)
         die();
 }
-static void corpse(const Zombie& z, float ang, bool head) {
+// kind: 0 face first toward you, 1 onto its back away from you, 2 crumple (knees give first), -1 pick one
+static void corpse(Zombie& z, float ang, bool head, int kind = -1) {
     if (corpses.size() > 260)
         corpses.erase(corpses.begin());
-    corpses.push_back({z.p, ang, z.type, z.armL, z.armR, head, 0, z.look, frand(0, 1)});
-    decal(z.p, .3f, BLOOD_DRY, frand(.9f, 1.5f));
+    Corpse c{z.p, ang, z.type, z.armL, z.armR, head, 0, z.look, frand(0, 1)};
+    c.fallKind = kind >= 0 ? kind : !head ? 2 : crawler(z) ? 0 : chance(.45f) ? 1 : 0;
+    c.fall = crawler(z) ? 1 : 0; // crawlers are already down
+    c.yaw0 = z.a;
+    float len = .88f * (z.look >= 0 && z.look < (int)looks.size() ? looks[z.look].scale.z : 1);
+    if (crawler(z)) { // lies where it crawled, head first
+        c.yaw = z.a + PI;
+        c.fallKind = 0;
+        len = 0;
+    }
+    Vector2 headDir = polar(c.fallKind == 1 ? c.yaw : c.yaw + PI, 1);
+    c.p = Vector2Add(z.p, Vector2Scale(headDir, len)); // the body lies ahead of where its feet were
+    for (int k = 0; k < 4; k++)
+        c.cut[k] = z.cut[k];
+    for (int k = 0; k < 3; k++)
+        c.wnd[k] = z.wnd[k];
+    c.ps = std::move(z.ps);
+    corpses.push_back(std::move(c));
+    decal(corpses.back().p, .3f, BLOOD_DRY, frand(.9f, 1.5f));
 }
 static void gibZombie(Zombie& z, float ang) {
     const ZDef& t = ZT[z.type];
@@ -192,6 +212,9 @@ static void hurtZ(Zombie& z, float dmg, bool head, float ang, bool dot, float di
         z.aggro = std::max(z.aggro, 8.f);
         z.stun = .1f;
         if (ang > -99) {
+            z.hitT = .3f;
+            z.hitA = ang;
+            z.hitK = Clamp(dmg / 40.f, .35f, 1.f) * (z.type == Z_BRUTE ? .4f : 1);
             float kb = z.type == Z_BRUTE ? .6f : z.type == Z_VOLATILE ? 1.5f : 3.f;
             z.k = Vector2Add(z.k, polar(ang, kb));
             spray(xz3(z.p, 1.2f), ang, 6, .5f, 1.5f, 6, z.type == Z_BLOATER ? ACID_C : BLOOD_FRESH, z.type == Z_BLOATER,
