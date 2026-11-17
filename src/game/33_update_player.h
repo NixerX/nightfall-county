@@ -220,6 +220,29 @@ static void updatePlayer(float dt) {
         Vector2 mv = Vector2Scale(P.vel, dt);
         P.p = Vector2Add(P.p, mv);
         P.walked += Vector2Length(mv);
+        P.fpT += Vector2Length(mv);
+        if (P.fpT > .7f) { // bloody footprints: step in a fresh pool and you track it for a dozen steps
+            P.fpT = 0;
+            for (auto& d : decals)
+                if (d.blood && d.r > .2f && gTime - d.born < CYCLE / 12 && Vector2Distance(d.p, P.p) < d.r * .7f) {
+                    P.fpStep = 12;
+                    break;
+                }
+            if (P.fpStep > 0) {
+                static int foot = 0;
+                foot ^= 1;
+                float ma = atan2f(P.vel.y, P.vel.x);
+                Vector2 fp = Vector2Add(P.p, polar(ma + (foot ? PI / 2 : -PI / 2), .12f));
+                Decal d{fp,          .1f,
+                        ma,          1,
+                        irand(4, 7), withA(BLOOD_DRY, .92f * P.fpStep / 12.f),
+                        0,           (buildingAt(fp) >= 0 ? .08f : .05f) + frand(0, .004f)};
+                d.born = gTime;
+                d.blood = true;
+                pushDecal(d);
+                P.fpStep--;
+            }
+        }
         { // walk cycle from the real speed, so the feet plant instead of skating; longer strides when sprinting
             float v = Vector2Length(P.vel);
             P.step += dt * v * (1 - .2f * Clamp((v / 3.4f - 1.1f) / .7f, 0, 1));

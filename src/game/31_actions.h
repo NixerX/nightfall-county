@@ -154,7 +154,9 @@ static void kick() {
         float d = Vector2Distance(z.p, P.p), a = atan2f(z.p.y - P.p.y, z.p.x - P.p.x);
         if (d < 1.7f + z.r && fabsf(angDiff(a, P.a)) < .95f && !wallBetween(P.p, z.p)) {
             float kb = (z.type == Z_BRUTE ? 2.5f : 8.f) * P.perks.kick;
+            hitStyle = HS_BLUNT;
             hurtZ(z, 9 * P.perks.kick * P.perks.melee, false, a, false);
+            hitStyle = HS_OTHER;
             z.k = Vector2Add(z.k, polar(a, kb));
             z.stun = z.type == Z_BRUTE ? .25f : .8f;
             hit = true;
@@ -198,7 +200,12 @@ static void melee() {
             !wallBetween(P.p, z.p)) { /* point-blank always connects */
             bool rage = P.actT > 0 && P.cls == 4;
             bool hd = chance(P.perks.crit + .08f);
+            bool blade = P.melee == MK_KNIFE || P.melee == MK_MACHETE || P.melee == MK_AXE || P.melee == MK_HATCHET;
+            hitStyle = blade ? HS_BLADE : HS_BLUNT;
+            hitMelee = P.melee;
             hurtZ(z, m.dmg * P.perks.melee * P.perks.dmg * (rage ? 2 : 1), hd, a, false, m.dism + (rage ? .2f : 0));
+            hitStyle = HS_OTHER;
+            hitMelee = -1;
             if (rage)
                 P.hp = std::min(P.perks.maxhp, P.hp + 4);
             z.k = Vector2Add(z.k, polar(a, 4));
@@ -285,6 +292,7 @@ static bool fire() {
         b.crit = w.crit;
         b.dism = w.dism;
         b.shotgun = w.key == W_SHOTGUN;
+        b.style = b.shotgun ? HS_SHOTGUN : w.slot == 1 ? HS_PISTOL : HS_RIFLE;
         bullets.push_back(b);
     }
     shake = std::min(.6f, shake + w.kick * .02f);

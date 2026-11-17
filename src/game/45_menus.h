@@ -183,16 +183,19 @@ static void drawSettings() {
     for (int i = 0; i < 5; i++)
         if (fpsOpt[i] == cfg.fps)
             fi = i;
+    // rows shrink to fit the screen (14 rows + the BACK button); hints are dropped when there's no room for them
+    const float rowH = Clamp((H - y - 100) / 14.f, 36, 58);
     auto row = [&](const char* label, const std::string& val, const char* hint) -> int {
-        text(label, x, y + 10, 18, BONE);
-        text(val, x + 420, y + 10, 18, SODIUM, 1);
-        text(hint, x, y + 42, 12, STEEL);
+        text(label, x, y + 8, 18, BONE);
+        text(val, x + 420, y + 8, 18, SODIUM, 1);
+        if (rowH >= 48)
+            text(hint, x, y + 37, 12, STEEL);
         int r = 0;
-        if (button("<", x + 300, y + 2, 40, 34, false))
+        if (button("<", x + 300, y + 2, 40, 32, false))
             r = -1;
-        if (button(">", x + 500, y + 2, 40, 34, false))
+        if (button(">", x + 500, y + 2, 40, 32, false))
             r = 1;
-        y += H < 800 ? 50 : 58;
+        y += rowH;
         return r;
     };
     int d;
@@ -243,6 +246,12 @@ static void drawSettings() {
     if ((d = row("Film grain", cfg.grain ? "On" : "Off",
                  "Animated static over the screen. Off is cleaner and a little faster.")))
         cfg.grain ^= 1;
+    {
+        static const char* GN3[3] = {"Low", "Normal", "Extreme"};
+        if ((d = row("Gore", GN3[cfg.gore],
+                     "Low keeps the blood but no flying body parts. Extreme: more of everything.")))
+            cfg.gore = (cfg.gore + d + 3) % 3;
+    }
     if ((d = row("Auto-equip guns", cfg.autoEquip ? "On" : "Off",
                  "Switch to a gun as soon as you pick it up. Off keeps what you're holding.")))
         cfg.autoEquip ^= 1;
@@ -252,8 +261,8 @@ static void drawSettings() {
         cfg.sfx = Clamp(cfg.sfx + d * .1f, 0, 1);
     if ((d = row("Music volume", pct(cfg.music), "Tension, horde drums, heartbeat")))
         cfg.music = Clamp(cfg.music + d * .1f, 0, 1);
-    text(TextFormat("Running at %d FPS", GetFPS()), x, y + 6, 14, STEEL);
-    if (button("BACK", x, y + 36, 150, 46, true) || IsKeyPressed(KEY_ESCAPE)) {
+    text(TextFormat("Running at %d FPS", GetFPS()), x + 180, y + 26, 14, STEEL);
+    if (button("BACK", x, y + 12, 150, 46, true) || IsKeyPressed(KEY_ESCAPE)) {
         saveCfg();
         state = settingsBack;
     }

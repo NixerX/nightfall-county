@@ -13,6 +13,7 @@ struct Settings {
     int res = 1;
     int grain = 1;
     int autoEquip = 0;
+    int gore = 1; // 0 low (blood, no flying parts), 1 normal, 2 extreme
 } cfg;
 static const int RES[6][2] = {{1280, 720},  {1600, 900},  {1920, 1080},
                               {2560, 1440}, {3840, 2160}, {0, 0}}; // last = native monitor
@@ -30,6 +31,9 @@ static void loadCfg() {
         cfg.grain = 1;
     if (!(f >> cfg.autoEquip))
         cfg.autoEquip = 0;
+    if (!(f >> cfg.gore))
+        cfg.gore = 1;
+    cfg.gore = std::max(0, std::min(2, cfg.gore));
     cfg.diff = std::max(0, std::min(3, cfg.diff));
     cfg.res = std::max(0, std::min(5, cfg.res));
     cfg.fullscreen = cfg.fullscreen ? 1 : 0;
@@ -41,5 +45,5 @@ static void saveCfg() {
     std::ofstream f(cfgPath());
     f << cfg.fps << " " << cfg.shadows << " " << cfg.foliage << " " << cfg.master << " " << cfg.sfx << " " << cfg.music
       << " " << cfg.controls << " " << cfg.diff << " " << cfg.fullscreen << " " << cfg.res << " " << cfg.grain << " "
-      << cfg.autoEquip;
+      << cfg.autoEquip << " " << cfg.gore;
 }

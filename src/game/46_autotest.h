@@ -1059,6 +1059,189 @@ static void autotest() {
     }
 }
 static void goreLab(int f) {
-    animLab(f);
+    static Vector2 o, wallPt;
+    P.hp = P.perks.maxhp;
+    P.iframe = 1;
+    for (auto& z : zombies) { // targets stand still and don't come for you
+        z.spd = 0;
+        z.notice = 0;
+        z.sees = false;
+        z.aggro = 0;
+        z.ignoreT = 5;
+        z.atk = 1;
+    }
+    auto line = [&](int n, int type) {
+        zombies.clear();
+        for (int i = 0; i < n; i++) {
+            Zombie& z = spawnZ(type, Vector2Add(o, V2(-4 + i * 1.6f, -3.5f)));
+            z.a = PI / 2;
+            z.spd = 0;
+        }
+    };
+    auto hit = [&](int i, float dmg, bool head, int style, int mk = -1, float dism = 0, bool expl = false) {
+        if (i >= (int)zombies.size() || zombies[i].dead)
+            return;
+        hitStyle = style;
+        hitMelee = mk;
+        hurtZ(zombies[i], dmg, head, -PI / 2 + frand(-.15f, .15f), false, dism, expl);
+        hitStyle = HS_OTHER;
+        hitMelee = -1;
+    };
+    if (f == 25) {
+        newGame();
+        o = labSpot();
+        P.p = o;
+        P.a = -PI / 2;
+        gTime = CYCLE * .2f;
+        corpses.clear();
+        decals.clear();
+        camZoom = 2.2f;
+        camLow = .3f;
+        line(6, Z_WALKER);
+    }
+    // 1: styles of body hit and kill, left to right: pistol, rifle, shotgun, blade, blunt, blast
+    if (f == 32) {
+        hit(0, 20, false, HS_PISTOL);
+        hit(1, 30, false, HS_RIFLE);
+        hit(2, 20, false, HS_SHOTGUN);
+        hit(3, 25, false, HS_BLADE, MK_MACHETE);
+        hit(4, 25, false, HS_BLUNT, MK_BAT);
+        hit(5, 20, false, HS_BLAST);
+    }
+    if (f == 40)
+        labShot("hits", 0);
+    if (f == 44) {
+        hit(0, 99, true, HS_PISTOL);              // headshot pop
+        hit(1, 99, true, HS_RIFLE);               // pop or decap
+        hit(2, 99, true, HS_BLADE, MK_AXE);       // decap
+        hit(3, 99, true, HS_BLUNT, MK_BAT);       // caved in
+        hit(4, 40, false, HS_PISTOL);             // body kill
+        hit(5, 60, false, HS_BLADE, MK_AXE, 1.f); // limb off
+    }
+    if (f >= 45 && f < 75 && f % 6 == 0)
+        labShot("heads", (f - 45) / 6);
+    // 2: gib patterns 0-3
+    if (f == 80) {
+        line(4, Z_WALKER);
+        for (int i = 0; i < 4; i++) {
+            gibForce = i;
+            hit(i, 400, false, HS_BLAST, -1, 0, true);
+        }
+        gibForce = -1;
+    }
+    if (f >= 81 && f < 141 && f % 5 == 0)
+        labShot("gibs", (f - 81) / 5);
+    // 3: dismember: legs -> crawlers, arms
+    if (f == 150) {
+        corpses.clear();
+        gibs.clear();
+        partGibs = 0;
+        line(4, Z_WALKER);
+        Zombie& a = zombies[0];
+        hitStyle = HS_BLADE;
+        hitMelee = MK_AXE;
+        dismember(a, -PI / 2, 2, 2);
+        dismember(zombies[1], -PI / 2, 3, 1);
+        dismember(zombies[2], -PI / 2, 0, 2);
+        dismember(zombies[3], -PI / 2, 1, 1);
+        hitStyle = HS_OTHER;
+        hitMelee = -1;
+    }
+    if (f >= 152 && f < 182 && f % 10 == 0)
+        labShot("limbs", (f - 152) / 10);
+    // 4: against a wall
+    if (f == 190) {
+        corpses.clear();
+        gibs.clear();
+        partGibs = 0;
+        int best = -1;
+        for (int i = 0; i < (int)blds.size() && best < 0; i++)
+            if (blds[i].doors.size() && Vector2Distance(blds[i].doors[0].out, P.p) > 0)
+                best = i;
+        if (best >= 0) {
+            const Building& B = blds[best];
+            wallPt = V2(B.x0 + (B.x1 - B.x0) * .3f, B.z1); // south wall, outside
+            o = Vector2Add(wallPt, V2(0, 3.2f));
+            P.p = o;
+            zombies.clear();
+            for (int i = 0; i < 3; i++) {
+                Zombie& z = spawnZ(Z_WALKER, Vector2Add(wallPt, V2(-1.2f + i * 1.2f, .7f)));
+                z.a = PI / 2;
+            }
+            printf("LAB wall bld=%d at %.1f,%.1f\n", best, wallPt.x, wallPt.y);
+        }
+        camLow = .45f;
+        camZoom = 2.6f;
+    }
+    if (f == 193)
+        for (int i = 0; i < 3; i++) {
+            hitStyle = i == 0 ? HS_SHOTGUN : i == 1 ? HS_RIFLE : HS_PISTOL;
+            for (int k = 0; k < 3; k++)
+                if (i < (int)zombies.size() && !zombies[i].dead)
+                    hurtZ(zombies[i], 30, false, -PI / 2 + frand(-.2f, .2f), false, 0, false);
+            hitStyle = HS_OTHER;
+        }
+    if (f == 200)
+        labShot("wall", 0);
+    if (f == 290)
+        labShot("wall", 1); // drips have run
+    // 5: footprints through the pool
+    if (f == 299)
+        P.p = Vector2Add(wallPt, V2(.6f, .9f));
+    if (f >= 300 && f < 340) {
+        P.autorun = true;
+        P.autoA = PI;
+        P.a = PI;
+        camLow = .2f;
+        camZoom = 1.6f;
+    }
+    if (f == 345)
+        labShot("prints", 0);
+    if (f == 303 || f == 320 || f == 340) {
+        int prints = 0;
+        for (auto& d : decals)
+            if (d.r == .1f && d.v >= 4)
+                prints++;
+        printf("LAB prints f=%d fpStep=%d placed=%d p=%.1f,%.1f\n", f, P.fpStep, prints, P.p.x, P.p.y);
+    }
+    // 6: hours later, dried
+    if (f == 350)
+        gTime += CYCLE / 6;
+    if (f == 352)
+        labShot("dried", 0);
+    if (f == 354) { // body parts, frozen in place next to each other
+        zombies.clear();
+        corpses.clear();
+        decals.clear();
+        wallDecals.clear();
+        gibs.clear();
+        partGibs = 0;
+        P.p = o = labSpot();
+        for (int k = 0; k < 6; k++) {
+            Zombie& z = spawnZ(Z_WALKER, Vector2Add(o, V2(-3.75f + k * 1.5f, -2.5f)));
+            z.a = PI / 2;
+            addPartGib(z, k, 0, 0, 0);
+            Gib& g = gibs.back();
+            g.v = V3(0, 0, 0);
+            g.p.y += .3f;
+            g.rest = true;
+        }
+        zombies.clear();
+        camZoom = 3.f;
+        camLow = .5f;
+    }
+    if (f == 356)
+        labShot("parts", 0);
+    if (f == 357)
+        for (auto& g : gibs)
+            g.rot = PI / 2; // as they lie on the ground
+    if (f == 359)
+        labShot("parts", 1);
+    if (f == 360) {
+        printf("LAB decals=%d wall=%d gibs=%d parts=%d corpses=%d\n", (int)decals.size(), (int)wallDecals.size(),
+               (int)gibs.size(), partGibs, (int)corpses.size());
+        CloseWindow();
+        exit(0);
+    }
 }
 #endif

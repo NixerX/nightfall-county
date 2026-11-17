@@ -413,6 +413,20 @@ static void buildLooks() {
         playerLooks[1] = (int)looks.size() - 1;
     }
 }
+// raylib's bone matrix scales after it translates, so a bone scaled to 0 collapses to the model's origin (the feet).
+// Collapsed bones (lost limbs, body-part gibs) must shrink onto their own joint instead.
+static void fixCollapsed(Asset& a) {
+    for (int m = 0; m < a.m.meshCount; m++) {
+        Mesh& me = a.m.meshes[m];
+        if (!me.boneMatrices)
+            continue;
+        for (int b = 0; b < me.boneCount && b < a.m.boneCount; b++)
+            if (a.fp[b].scale.x < 1e-4f)
+                me.boneMatrices[b] =
+                    MatrixMultiply(MatrixScale(0, 0, 0), MatrixTranslate(a.fp[b].translation.x, a.fp[b].translation.y,
+                                                                         a.fp[b].translation.z));
+    }
+}
 struct CharOut {
     Vector3 hand[2], head, chest, elbow[2], shoulder[2], knee[2], hip[2];
     Matrix M;
@@ -444,6 +458,7 @@ static void drawCharacter(int lookIdx, const PoseIn& pin, Vector2 pos, float yaw
             solvePose(a.rig, D, S, ro, a.fp);
     }
     UpdateModelAnimationBones(a.m, a.anim, 0);
+    fixCollapsed(a);
     Matrix M = MatrixMultiply(MatrixMultiply(MatrixScale(L.scale.x, L.scale.y, L.scale.z), MatrixRotateY(PI / 2 - yaw)),
                               MatrixTranslate(pos.x, charY, pos.y));
     if (lie != 0) {

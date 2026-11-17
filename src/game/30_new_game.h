@@ -49,6 +49,9 @@ static void newGame(unsigned seed = 0) {
     acid.clear();
     decals.clear();
     decalHead = 0;
+    wallDecals.clear();
+    wallHead = 0;
+    partGibs = 0;
     floaters.clear();
     lights.clear();
     sdrops.clear();

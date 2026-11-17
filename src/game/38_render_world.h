@@ -30,6 +30,37 @@ static void zombiePose(const Zombie& z, PoseIn& pin) {
         pin.hitX = -sinf(rel) * k;
     }
 }
+// a body part that came off: the zombie's own model with every bone outside the part collapsed
+static void drawPartGib(const Gib& g) {
+    const Look& L = looks[g.look];
+    Asset& a = assets[L.asset];
+    if (g.root < 0 || g.root >= (int)a.rig.bind.size())
+        return;
+    PoseIn pin;
+    pin.kind = PK_ZOMBIE;
+    pin.seed = g.seed;
+    static std::vector<Quaternion> D;
+    static std::vector<float> S;
+    Vector3 ro = buildPose(a.rig, pin, D, S);
+    for (int i = 0; i < (int)S.size(); i++)
+        if (!inSubtree(a.rig, i, g.root))
+            S[i] = 0;
+    solvePose(a.rig, D, S, ro, a.fp, true);
+    for (int i = 0; i < (int)S.size(); i++) // removed bones shrink onto the break, so skin shared with them stays short
+        if (S[i] == 0)
+            a.fp[i].translation = a.fp[g.root].translation;
+    UpdateModelAnimationBones(a.m, a.anim, 0);
+    fixCollapsed(a);
+    Matrix Mg = MatrixMultiply(MatrixMultiply(MatrixTranslate(-g.c0.x, -g.c0.y, -g.c0.z), MatrixRotate(g.axis, g.rot)),
+                               MatrixTranslate(g.p.x, g.p.y, g.p.z));
+    Matrix M = MatrixMultiply(g.M0, Mg);
+    for (int i = 0; i < a.m.meshCount; i++) {
+        int mi = a.m.meshMaterial[i];
+        a.m.materials[mi].maps[MATERIAL_MAP_DIFFUSE].color = lerpC(L.col[mi], rgba(84, 8, 12), .3f);
+        DrawMesh(a.m.meshes[i], a.m.materials[mi], MatrixMultiply(a.m.transform, M));
+    }
+    drawMeshM(M_SPHERE, TRS(Vector3Transform(a.fp[g.root].translation, M), V3(.1f, .1f, .1f), 0), rgba(130, 12, 18));
+}
 // bloody stumps where limbs came off
 static void drawStumps(const CharOut& co, const signed char* cut, bool armL, bool armR) {
     const Color sc = rgba(130, 12, 18);
@@ -351,8 +382,12 @@ static void renderWorld3D() {
                   cp.head, 3, 1, WHITE, cp.type == Z_SOLDIER ? 2 : 0, -1);
     }
     for (auto& g : gibs)
-        if (vis(g.p.x, g.p.z, 2))
-            drawGibM(g);
+        if (vis(g.p.x, g.p.z, 2)) {
+            if (g.look >= 0 && haveChars)
+                drawPartGib(g);
+            else
+                drawGibM(g);
+        }
     // zombies
     for (auto& z : zombies) {
         if (!vis(z.p.x, z.p.y, 3))
@@ -575,10 +610,34 @@ player_done:;
     // blood decals
     rlSetTexture(bloodTex.id);
     rlBegin(RL_QUADS);
+    const float dryT = CYCLE / 8; // ~3 in-game hours from wet red to dried brown
+    auto bloodC = [&](Color c, float born) {
+        float age = std::max(0.f, gTime - born), f = std::min(1.f, age / dryT);
+        Color wet = rgba(76, 6, 10, c.a), dark = rgba(56, 5, 8, c.a), dry = rgba(40, 17, 12, c.a);
+        Color o = f < .15f ? lerpC(wet, dark, f / .15f) : lerpC(dark, dry, (f - .15f) / .85f);
+        o.a = (unsigned char)(c.a * (1 - .35f * std::min(1.f, age / CYCLE))); // fades over a day
+        return o;
+    };
     for (auto& d : decals) {
         if (!vis(d.p.x, d.p.y, 2))
             continue;
-        groundQuad(d.p, d.y, d.r, d.rot, d.c, {d.v * .25f, 0, .25f, 1});
+        groundQuad(d.p, d.y, d.r, d.rot, d.blood ? bloodC(d.c, d.born) : d.c, {d.v * .125f, 0, .125f, 1});
+    }
+    for (auto& w : wallDecals) { // on walls: a splat, and the drip running down from it
+        if (!vis(w.p.x, w.p.z, 2))
+            continue;
+        Vector3 n = V3(w.n.x, 0, w.n.y), t = V3(-w.n.y, 0, w.n.x), up = V3(0, 1, 0);
+        Vector3 c = Vector3Add(w.p, Vector3Scale(n, .012f));
+        Color col = bloodC(BLOOD_DRY, w.born);
+        Vector3 ax = Vector3Add(Vector3Scale(t, cosf(w.rot) * w.r), Vector3Scale(up, sinf(w.rot) * w.r));
+        Vector3 ay = Vector3Add(Vector3Scale(t, -sinf(w.rot) * w.r), Vector3Scale(up, cosf(w.rot) * w.r));
+        quad3(c, ax, ay, n, col, {w.v * .125f, 0, .125f, 1});
+        if (w.drip > .02f) {
+            float wd = std::max(.03f, w.r * .45f);
+            Vector3 dc = Vector3Add(c, V3(0, -w.drip * .5f, 0));
+            quad3(Vector3Add(dc, Vector3Scale(n, .002f)), V3(0, -w.drip * .55f, 0), Vector3Scale(t, wd), n, col,
+                  {4 * .125f, 0, .125f, 1});
+        }
     }
     rlEnd();
     // particles (lit)

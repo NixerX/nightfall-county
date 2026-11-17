@@ -381,7 +381,9 @@ static void updateZombies(float dt) {
         float wl = Vector2Length(mv);
         z.walk += wl;
         z.vNow += (wl / std::max(dt, 1e-4f) - z.vNow) * std::min(1.f, dt * 10);
-        if (z.type == Z_BRUTE && d < 14) { // heavy footfalls you can feel
+        if (crawler(z) && floorf(z.walk / .5f) != floorf((z.walk - wl) / .5f))
+            streak(z.p, z.a + PI, frand(.4f, .7f)); // drags a smear behind it
+        if (z.type == Z_BRUTE && d < 14) {          // heavy footfalls you can feel
             float stepL = PI / 3.6f;
             if (floorf(z.walk / stepL) != floorf((z.walk - wl) / stepL)) {
                 shake = std::min(.35f, shake + .07f * (1 - d / 14));

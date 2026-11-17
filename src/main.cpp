@@ -128,6 +128,10 @@ int main() {
         W = GetScreenWidth();
         H = GetScreenHeight();
         float dt = std::min(.033f, GetFrameTime());
+        if (slowMo > 0 && state == ST_PLAY) { // the odd spectacular kill gets a beat of slow motion
+            slowMo -= dt;
+            dt *= .3f;
+        }
 #ifdef NF_AUTOTEST
         dt = 1.f / 30;
         autotest();

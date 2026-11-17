@@ -185,18 +185,28 @@ static void initRender() {
     SetTextureWrap(detailTex, TEXTURE_WRAP_REPEAT);
     SetTextureFilter(detailTex, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&detailTex);
-    // blood atlas: 4 splat variants in 256x64
-    Image bi = GenImageColor(256, 64, BLANK);
-    for (int v = 0; v < 4; v++) {
+    // blood atlas, 512x64: cells 0-3 round splats, 4-7 streaks (head at the left, tail and drops off to the right)
+    Image bi = GenImageColor(512, 64, BLANK);
+    for (int v = 0; v < 8; v++) {
         std::vector<Vector3> blobs;
-        int nb = 5 + v * 3;
-        for (int i = 0; i < nb; i++)
-            blobs.push_back(V3(32 + frand(-14, 14) * (i ? 1.f : 0.f), 32 + frand(-14, 14) * (i ? 1.f : 0.f),
-                               i ? frand(3, 9) : frand(12, 17)));
-        for (int i = 0; i < 6 + v; i++) {
-            float a = frand(0, 2 * PI);
-            for (int k = 0; k < 6; k++)
-                blobs.push_back(V3(32 + cosf(a) * (14 + k * 2.6f), 32 + sinf(a) * (14 + k * 2.6f), 2.6f - k * .35f));
+        if (v < 4) {
+            int nb = 5 + v * 3;
+            for (int i = 0; i < nb; i++)
+                blobs.push_back(V3(32 + frand(-14, 14) * (i ? 1.f : 0.f), 32 + frand(-14, 14) * (i ? 1.f : 0.f),
+                                   i ? frand(3, 9) : frand(12, 17)));
+            for (int i = 0; i < 6 + v; i++) {
+                float a = frand(0, 2 * PI);
+                for (int k = 0; k < 6; k++)
+                    blobs.push_back(
+                        V3(32 + cosf(a) * (14 + k * 2.6f), 32 + sinf(a) * (14 + k * 2.6f), 2.6f - k * .35f));
+            }
+        } else {
+            float y = 32 + frand(-3, 3), w = frand(5.5f, 8.5f), bend = frand(-.12f, .12f);
+            blobs.push_back(V3(10, y, w * 1.1f));
+            for (float x = 10; x < 54; x += 1.5f) // tapering trail
+                blobs.push_back(V3(x, y + (x - 10) * bend + frand(-.6f, .6f), w * (1 - (x - 10) / 50) + .9f));
+            for (int i = 0; i < 6 + v; i++) // flung droplets beyond the tail, and a few to the sides
+                blobs.push_back(V3(frand(30, 61), y + frand(-9, 9) * frand(.2f, 1), frand(1.2f, 2.8f)));
         }
         for (int y = 0; y < 64; y++)
             for (int x = 0; x < 64; x++) {
@@ -206,6 +216,8 @@ static void initRender() {
                     f += b.z * b.z / (dx * dx + dy * dy + 1);
                 }
                 float a = Clamp((f - .9f) * 3.f, 0, 1);
+                if (x < 1 || x > 62 || y < 1 || y > 62)
+                    a = 0; // no bleed into the next cell
                 if (a > 0)
                     ImageDrawPixel(&bi, v * 64 + x, y,
                                    rgba(255, 255, 255, (int)(a * 255 * (.75f + .25f * frand(0, 1)))));

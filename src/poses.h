@@ -28,13 +28,14 @@ static Rig makeRig(Model& m) {
     return r;
 }
 // FK: D = model-space delta rotation per bone, S = scale factor per bone (0 collapses a limb), rootOff moves the hips.
-static void solvePose(const Rig& r, const std::vector<Quaternion>& D, const std::vector<float>& S, Vector3 rootOff, Transform* out) {
+// local = true: a bone's scale doesn't pass to its children (collapse a parent, keep a limb: body-part gibs)
+static void solvePose(const Rig& r, const std::vector<Quaternion>& D, const std::vector<float>& S, Vector3 rootOff, Transform* out, bool local = false) {
     int n = (int)r.bind.size();
     for (int i = 0; i < n; i++) {
         const Transform& b = r.bind[i]; int p = r.parent[i];
         if (p < 0) { out[i] = {Vector3Add(b.translation, rootOff), QuaternionMultiply(D[i], b.rotation), {S[i], S[i], S[i]}}; continue; }
         Quaternion pd = QuaternionMultiply(out[p].rotation, QuaternionInvert(r.bind[p].rotation));
-        float ps = out[p].scale.x;
+        float ps = local ? 1.f : out[p].scale.x;
         Vector3 off = Vector3Scale(Vector3RotateByQuaternion(Vector3Subtract(b.translation, r.bind[p].translation), pd), ps);
         Vector3 pos = Vector3Add(out[p].translation, off);
         if (i == r.hips) pos = Vector3Add(pos, rootOff);

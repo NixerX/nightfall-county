@@ -38,8 +38,10 @@ static void updateBullets(float dt) {
                         z.burn = 3;
                     if (b.leech > 0)
                         P.hp = std::min(P.perks.maxhp, P.hp + b.leech);
+                    hitStyle = b.style;
                     hurtZ(z, b.dmg, hd, atan2f(b.v.y, b.v.x), false, b.dism,
                           b.shotgun && Vector2Distance(z.p, P.p) < 3.5f);
+                    hitStyle = HS_OTHER;
                     if (b.pierce > 0) {
                         b.pierce--;
                         b.dmg *= .8f;
@@ -186,6 +188,8 @@ static void updateWorld(float dt) {
         }
         Vector3 np = Vector3Add(p.p, Vector3Scale(p.v, dt));
         if (blood && pointSolid(np.x, np.z, np.y)) {
+            if (p.kind == P_BLOOD && np.y > .06f && chance(.6f))
+                wallSplat(p.p, np, p.s * frand(1.6f, 3.2f)); // it marks the wall
             p.t = 0;
             p.v = V3(0, 0, 0);
         } else
@@ -194,7 +198,8 @@ static void updateWorld(float dt) {
         if (p.p.y < floor) {
             p.p.y = floor;
             if (blood) {
-                decal(V2(p.p.x, p.p.z), p.s * frand(2, 4.5f), p.kind == P_ACID ? ACID_C : BLOOD_DRY);
+                if (p.kind == P_ACID || chance(.6f))
+                    decal(V2(p.p.x, p.p.z), p.s * frand(.9f, 2.f), p.kind == P_ACID ? ACID_C : BLOOD_DRY);
                 p.t = 0;
             } else if (p.kind == P_CASING) {
                 p.v = Vector3Scale(p.v, .3f);
@@ -238,14 +243,24 @@ static void updateWorld(float dt) {
             g.rotv *= .5f;
         }
         g.rot += g.rotv * dt;
+        bool settled = true;
+        if (g.look >= 0 && g.p.y <= fl + .03f) { // body parts tip over and lie flat once they're on the ground
+            float tgt = roundf((g.rot - PI / 2) / PI) * PI + PI / 2;
+            g.rot += (tgt - g.rot) * std::min(1.f, dt * 6);
+            g.rotv *= powf(.02f, dt);
+            settled = fabsf(tgt - g.rot) < .04f;
+        }
         g.trail += Vector3Length(g.v) * dt;
         if (g.trail > .35f && g.p.y < .4f) {
             g.trail = 0;
             decal(V2(g.p.x, g.p.z), frand(.05f, .12f), g.acid ? ACID_C : BLOOD_DRY);
         }
-        if (g.t > 1 && Vector3Length(g.v) < .3f)
+        if (g.t > 1 && Vector3Length(g.v) < .3f && settled)
             g.rest = true;
     }
+    for (auto& w : wallDecals)
+        if (w.drip < w.dripMax)
+            w.drip = std::min(w.dripMax, w.drip + dt * .12f);
     for (auto& d : decals)
         if (d.grow > 0) {
             float add = std::min(d.grow, dt * .35f);

@@ -123,7 +123,13 @@ struct Gib {
     Vector3 s;
     float t, trail;
     bool acid, rest;
+    // body-part gibs (the zombie's own model, all but one limb collapsed)
+    int look = -1, root = -1; // look index; root bone of the kept part
+    Matrix M0{};              // body transform when it came off
+    Vector3 c0{};             // world point it spins around (where it was on the body)
+    float seed = 0;
 };
+static int partGibs = 0;
 struct Bullet {
     Vector2 p, v;
     float dmg, life;
@@ -132,6 +138,17 @@ struct Bullet {
     int nh = 0;
     bool burn, shotgun;
     float leech, crit, dism;
+    int style = 0; // HitStyle: how it marks what it hits
+};
+// how a hit marks a body (spray, streaks, what comes off)
+enum HitStyle {
+    HS_OTHER,
+    HS_PISTOL,
+    HS_RIFLE,
+    HS_SHOTGUN,
+    HS_BLADE,
+    HS_BLUNT,
+    HS_BLAST
 };
 struct Bomb {
     Vector3 p, v;
@@ -145,10 +162,21 @@ struct AcidPool {
 struct Decal {
     Vector2 p;
     float r, rot, a;
-    int v;
+    int v; // atlas cell: 0-3 splats, 4-7 streaks (tail along rot)
     Color c;
     float grow, y;
+    float born = 0;     // gTime it was made: blood dries over a few hours
+    bool blood = false; // fresh red that darkens with age
 };
+struct WallDecal { // blood on walls: a splat, sometimes running into a drip
+    Vector3 p;
+    Vector2 n; // wall normal (xz)
+    float r, rot;
+    int v;
+    float drip, dripMax, born;
+};
+static std::vector<WallDecal> wallDecals;
+static int wallHead = 0;
 struct Floater {
     Vector3 p;
     std::string txt;
