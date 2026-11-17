@@ -297,10 +297,13 @@ static void drawHUD() {
         text(banner.a, W / 2.f, H * .17f, std::min(60.f, W * .055f), withA(banner.c, a), 1);
         text(banner.b, W / 2.f, H * .17f + std::min(60.f, W * .055f) + 6, 17, withA(BONE, a * .9f), 1);
     }
-    // loot labels & prompt
+    // loot labels & prompt (in a fight, only the one you are standing on)
+    int zClose = 0;
+    for (auto& z : zombies)
+        zClose += !z.dead && Vector2DistanceSqr(z.p, P.p) < 100;
     for (int i = 0; i < (int)loot.size(); i++) {
         const Loot& l = loot[i];
-        if (Vector2Distance(V2(l.p.x, l.p.z), P.p) > 7 || lootHidden(l))
+        if (Vector2Distance(V2(l.p.x, l.p.z), P.p) > (zClose >= 2 ? 1.5f : 7) || lootHidden(l))
             continue;
         Vector2 s = GetWorldToScreen(Vector3Add(l.p, V3(0, .4f, 0)), cam3);
         std::string nm = l.kind == LK_GUN     ? l.w.name
