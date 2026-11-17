@@ -50,6 +50,16 @@ enum SfxId {
     SFX_DOOR_METAL,
     SFX_CAR_ALARM,
     SFX_HISS,
+    // footsteps by surface (SFX_STEP stays the generic one)
+    SFX_STEP_GRASS,
+    SFX_STEP_LEAVES,
+    SFX_STEP_DIRT,
+    SFX_STEP_GRAVEL,
+    SFX_STEP_SAND,
+    SFX_STEP_CONCRETE,
+    SFX_STEP_WOOD,
+    SFX_STEP_CARPET,
+    SFX_STEP_WET, // splash layered on top in the rain
     SFX_COUNT
 };
 constexpr int ALIASES = 6;
@@ -256,8 +266,22 @@ static void buildAudio() {
                 s.noise(i * .12f, .08f, .4f, 2000, 300, 4);
             break;
         case SFX_STEP:
+        case SFX_STEP_GRASS:
+        case SFX_STEP_LEAVES:
+        case SFX_STEP_DIRT:
+        case SFX_STEP_GRAVEL:
+        case SFX_STEP_SAND:
+        case SFX_STEP_CONCRETE:
+        case SFX_STEP_WOOD:
+        case SFX_STEP_CARPET: // fallback when the recordings are missing
             s = Synth(.08f);
             s.noise(0, .06f, .25f, 900, 120, 6);
+            break;
+        case SFX_STEP_WET: // a foot coming down in a puddle: wet slap and a short spray of droplets
+            s = Synth(.22f);
+            s.noise(0, .05f, .35f, 1800, 400, 9);
+            for (int i = 0; i < 5; i++)
+                s.noise(.03f + frand(0, .12f), .02f, .12f, 4200, 2000, 14);
             break;
         case SFX_DOOR_OPEN:
         case SFX_DOOR_CLOSE:
@@ -302,6 +326,14 @@ static void buildAudio() {
         }
     };
     add(SFX_STEP, "footstep", 0, 9, "%s%02d.ogg");
+    add(SFX_STEP_GRASS, "step_grass_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_LEAVES, "step_leaves_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_DIRT, "step_dirt_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_GRAVEL, "step_gravel_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_SAND, "step_sand_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_CONCRETE, "step_concrete_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_WOOD, "step_wood_", 0, 9, "%s%d.ogg");
+    add(SFX_STEP_CARPET, "step_carpet_", 0, 9, "%s%d.ogg");
     add(SFX_DOOR_OPEN, "doorOpen_", 0, 9, "%s%d.ogg");
     add(SFX_DOOR_OPEN, "doorOpen_", 0, 9, "%s%03d.ogg");
     add(SFX_DOOR_CLOSE, "doorClose_", 0, 9, "%s%d.ogg");
@@ -345,14 +377,14 @@ static void buildAudio() {
         nb += (int)b.size() / 2;
     TraceLog(LOG_INFO, "NIGHTFALL: %d recorded sound samples", nb);
 }
-static void sfx(int id, float vol = 1, float pv = .08f) {
+static void sfx(int id, float vol = 1, float pv = .08f, float pitch = 1) {
     if (!audioOk || muted)
         return;
     vol *= cfg.master * cfg.sfx;
     if (!bank[id].empty()) {
         Sound& b = bank[id][irand(0, (int)bank[id].size() - 1)];
-        SetSoundVolume(b, vol * (id == SFX_STEP ? .9f : .75f));
-        SetSoundPitch(b, 1 + frand(-pv, pv));
+        SetSoundVolume(b, vol * (id == SFX_STEP || id >= SFX_STEP_GRASS ? .9f : .75f));
+        SetSoundPitch(b, pitch * (1 + frand(-pv, pv)));
         PlaySound(b);
         if (id != SFX_BOOM)
             return;
@@ -360,12 +392,12 @@ static void sfx(int id, float vol = 1, float pv = .08f) {
     Sound& s = snd[id][sndNext[id]];
     sndNext[id] = (sndNext[id] + 1) % ALIASES;
     SetSoundVolume(s, vol * .6f);
-    SetSoundPitch(s, 1 + frand(-pv, pv));
+    SetSoundPitch(s, pitch * (1 + frand(-pv, pv)));
     PlaySound(s);
 }
-static void sfxAt(int id, Vector2 at, float vol = 1, float pv = .08f) {
+static void sfxAt(int id, Vector2 at, float vol = 1, float pv = .08f, float pitch = 1) {
     float d = Vector2Distance(at, P.p);
     if (d > 70)
         return;
-    sfx(id, vol * Clamp(1 - d / 70, 0, 1), pv);
+    sfx(id, vol * Clamp(1 - d / 70, 0, 1), pv, pitch);
 }

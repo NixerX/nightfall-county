@@ -160,6 +160,55 @@ static void autotest() {
     if (getenv("NF_SCENE")) {
         if (atFrame == 20)
             SetWindowSize(1280, 720);
+        if (!strcmp(getenv("NF_SCENE"), "steps")) { // what footsteps hear across the map
+            if (atFrame == 25) {
+                newGame();
+                const char* nm[] = {"grass", "leaves", "dirt", "gravel", "sand", "concrete", "wood", "carpet"};
+                int cnt[8] = {0}, inB = 0, onR = 0;
+                for (int i = 0; i < 20000; i++) {
+                    Vector2 p = V2(frand(20, MAP - 20), frand(20, MAP - 20));
+                    StepS st = stepSurface(p);
+                    cnt[st.id - SFX_STEP_GRASS]++;
+                    inB += buildingAt(p) >= 0;
+                    onR += roadDist(p) < 3;
+                }
+                for (int k = 0; k < 8; k++)
+                    printf("STEPS %-8s %5.1f%%\n", nm[k], cnt[k] / 200.f);
+                int house = -1, store = -1, barn = -1;
+                for (int i = 0; i < (int)blds.size(); i++) {
+                    if (blds[i].cellKind)
+                        continue;
+                    if (blds[i].type == B_HOUSE && house < 0)
+                        house = i;
+                    if (blds[i].type == B_STORE && store < 0)
+                        store = i;
+                    if (blds[i].type == B_BARN && barn < 0)
+                        barn = i;
+                }
+                int ids[3] = {house, store, barn};
+                const char* bn[3] = {"house", "store", "barn"};
+                for (int k = 0; k < 3; k++)
+                    if (ids[k] >= 0) {
+                        const Building& b = blds[ids[k]];
+                        StepS st = stepSurface(V2((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2));
+                        printf("STEPS in %s -> %s pitch %.2f\n", bn[k], nm[st.id - SFX_STEP_GRASS], st.pitch);
+                    }
+                for (int t = 0; t < 3; t++)
+                    for (auto& r : roads)
+                        if (r.tier == t) {
+                            StepS st = stepSurface(Vector2Lerp(r.a, r.b, .5f));
+                            printf("STEPS road tier %d -> %s\n", t, nm[st.id - SFX_STEP_GRASS]);
+                            break;
+                        }
+                printf("STEPS banks:");
+                for (int id = SFX_STEP_GRASS; id <= SFX_STEP_CARPET; id++)
+                    printf(" %d", (int)bank[id].size() / 2);
+                printf("\n");
+                CloseWindow();
+                exit(0);
+            }
+            return;
+        }
         if (!strcmp(getenv("NF_SCENE"), "anim"))
             animLab(atFrame);
         else

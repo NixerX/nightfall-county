@@ -5,6 +5,7 @@ Zombie variants are the same character models recolored at runtime by the game.
 Surface textures (assets/textures): ambientCG, https://ambientcg.com, CC0 1.0. Asphalt, wet asphalt, concrete, brick, plaster, rusted metal and hospital tile sets.
 
 Sound effects (assets/sounds): Kenney (kenney.nl), CC0 1.0. Footsteps, doors, creaks, chopping, knife, cloth, metal clicks, explosions.
+Surface footsteps (assets/sounds/step_*): Kenney Impact Sounds (kenney.nl), CC0 1.0. Grass, concrete, wood and carpet as recorded; gravel, dirt, leaves and sand made from them (pitched, filtered, layered).
 Ground and building textures (assets/textures/ground and roof/cabin/hardwood/barn/plywood/chainlink): ambientCG, CC0 1.0.
 
 Ambience, creature, gore and melee impact recordings: Sonniss GDC 2026 Game Audio Bundle (royalty-free; contributors include Epic Stock Media, 344 Audio, SoundBits, InMotionAudio, David Dumais Audio, The Noisery, Jake Fielding). Trimmed, looped and converted.

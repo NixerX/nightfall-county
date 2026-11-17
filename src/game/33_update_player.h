@@ -20,6 +20,85 @@ static std::vector<int>& zNear(Vector2 p) {
     return znb;
 }
 static float stepT = 0;
+// ---- footsteps: what's underfoot decides the sound (building floor, road surface, or the terrain layer)
+struct StepS {
+    int id;
+    float pitch, vol;
+};
+static StepS stepSurface(Vector2 p, bool onLoft = false) {
+    if (onLoft)
+        return {SFX_STEP_WOOD, .9f, 1.1f}; // hayloft boards
+    int bi = buildingAt(p);
+    if (bi >= 0) {
+        const Building& b = blds[bi];
+        if (b.cellKind == 2)
+            return {SFX_STEP_CONCRETE, .92f, 1}; // basement slab
+        int t = b.cellKind && b.parent >= 0 ? blds[b.parent].type : b.type;
+        if (t == B_BARN || t == B_GARAGE || t == B_HANGAR || t == B_SHED || t == B_FACTORY || t == B_FIRE)
+            return {SFX_STEP_CONCRETE, .95f, 1};
+        if (t == B_CLINIC || t == B_STORE || t == B_POLICE || t == B_SCHOOL || t == B_GAS || t == B_OFFICE)
+            return {SFX_STEP_CONCRETE, 1.15f, .95f}; // tile: harder, clickier
+        if (b.cellKind == 1 && bi % 3 == 0)
+            return {SFX_STEP_CARPET, 1, .7f}; // some upstairs are carpeted
+        return {SFX_STEP_WOOD, 1, 1};
+    }
+    for (const Road& r : roads) { // on the road itself: paved, gravel or dirt by tier
+        Vector2 ab = Vector2Subtract(r.b, r.a);
+        float L2 = Vector2LengthSqr(ab);
+        float tt = L2 > 0 ? Clamp(Vector2DotProduct(Vector2Subtract(p, r.a), ab) / L2, 0, 1) : 0;
+        if (Vector2Distance(p, Vector2Add(r.a, Vector2Scale(ab, tt))) < r.w * .5f)
+            return r.tier == 0   ? StepS{SFX_STEP_CONCRETE, .88f, 1}
+                   : r.tier == 1 ? StepS{SFX_STEP_GRAVEL, 1, 1.1f}
+                                 : StepS{SFX_STEP_DIRT, 1, .95f};
+    }
+    int sx = (int)p.x >> 1, sy = (int)p.y >> 1, best = 0;
+    if (sx >= 0 && sy >= 0 && sx < SPN && sy < SPN && !splat.empty()) {
+        const unsigned char* px = &splat[((size_t)sy * SPN + sx) * SPC];
+        for (int k = 1; k < 12; k++)
+            if (px[k] > px[best])
+                best = k;
+    }
+    // 0 short grass, 1 long grass, 2 lawn, 3 mossy forest floor, 4 leafy dirt, 5 packed earth, 6 gray dirt,
+    // 7 gravel, 8 dark soil, 9 concrete, 10 rubble dirt, 11 sand
+    switch (best) {
+    case 1:
+        return {SFX_STEP_GRASS, .9f, .95f};
+    case 3:
+        return {SFX_STEP_CARPET, .8f, .75f}; // moss: soft and muffled
+    case 4:
+        return {SFX_STEP_LEAVES, 1, .9f};
+    case 5:
+    case 6:
+    case 8:
+        return {SFX_STEP_DIRT, 1, .9f};
+    case 10:
+        return {SFX_STEP_GRAVEL, .85f, .9f};
+    case 7:
+        return {SFX_STEP_GRAVEL, 1, 1.1f};
+    case 9:
+        return {SFX_STEP_CONCRETE, 1, 1};
+    case 11:
+        return {SFX_STEP_SAND, 1, .8f};
+    default:
+        return {SFX_STEP_GRASS, 1, .8f};
+    }
+}
+// play a footstep at p (the player's own when p is the player): surface sound, plus a splash outdoors in the rain
+static void stepSound(Vector2 p, float vol, float pv = .15f, float pitch = 1, bool player = true) {
+    StepS s = stepSurface(p, player && P.loft >= 0);
+    if (player)
+        sfx(s.id, vol * s.vol, pv, s.pitch * pitch);
+    else
+        sfxAt(s.id, p, vol * s.vol, pv, s.pitch * pitch);
+    if (rainLevel > .25f && buildingAt(p) < 0 && !(player && P.loft >= 0)) {
+        bool soft = s.id == SFX_STEP_DIRT || s.id == SFX_STEP_GRASS || s.id == SFX_STEP_LEAVES;
+        float wv = vol * rainLevel * (soft ? .7f : .45f); // mud squelches more than wet pavement
+        if (player)
+            sfx(SFX_STEP_WET, wv, .2f, pitch);
+        else
+            sfxAt(SFX_STEP_WET, p, wv, .2f, pitch);
+    }
+}
 static void updatePlayer(float dt) {
     P.alive += dt;
     Vector2 in = V2((float)((IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) - (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))),
@@ -252,7 +331,7 @@ static void updatePlayer(float dt) {
             stepT -= dt * sp;
             if (stepT <= 0) {
                 stepT = 1.3f;
-                sfx(SFX_STEP, P.crouch ? .2f : P.sprint ? .55f : .35f, .2f);
+                stepSound(P.p, P.crouch ? .2f : P.sprint ? .55f : .35f);
             }
         }
     }

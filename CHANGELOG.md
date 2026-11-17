@@ -11,6 +11,7 @@
 - Zombies get bloodier where they've been hit, so you can see which ones are close to dropping.
 - Shoot or chop off a leg and the zombie drops and crawls after you. Crawlers grab ankles.
 - Settings: Gore (Low / Normal / Extreme). Low keeps the blood but nothing flies.
+- Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 
 ## v0.8.8

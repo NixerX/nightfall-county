@@ -387,7 +387,7 @@ static void updateZombies(float dt) {
             float stepL = PI / 3.6f;
             if (floorf(z.walk / stepL) != floorf((z.walk - wl) / stepL)) {
                 shake = std::min(.35f, shake + .07f * (1 - d / 14));
-                sfxAt(SFX_STEP, z.p, .9f, .1f);
+                stepSound(z.p, .9f, .1f, .7f, false); // heavy and low
                 for (int k = 0; k < 3; k++)
                     parts.push_back({xz3(z.p, .05f), V3(frand(-1, 1), .3f, frand(-1, 1)), .5f, .5f, .3f,
                                      rgba(90, 80, 70, 120), P_DUST});
