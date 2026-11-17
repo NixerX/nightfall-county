@@ -264,10 +264,10 @@ static bool boxFree(float x0, float z0, float x1, float z1) {
     }
     return true;
 }
-static void collide(Vector2& o, float r) {
+static void collide(Vector2& o, float r, bool skipFence = false) {
     for (int i : query(o.x, o.y, r)) {
         const Solid& s = solids[i];
-        if (!solidOn(s))
+        if (!solidOn(s) || (skipFence && s.kind == SK_FENCE))
             continue;
         float cx = Clamp(o.x, s.x0, s.x1), cz = Clamp(o.y, s.z0, s.z1), dx = o.x - cx, dz = o.y - cz,
               d2 = dx * dx + dz * dz;
@@ -291,6 +291,17 @@ static void collide(Vector2& o, float r) {
     }
     o.x = Clamp(o.x, r, (o.x > MAP + 10 ? WORLDX : MAP) - r);
     o.y = Clamp(o.y, r, MAP - r);
+}
+static bool fenceNear(Vector2 o, float r) { // a fence within r (zombies climb these)
+    for (int i : query(o.x, o.y, r)) {
+        const Solid& s = solids[i];
+        if (s.kind != SK_FENCE || !solidOn(s))
+            continue;
+        float cx = Clamp(o.x, s.x0, s.x1), cz = Clamp(o.y, s.z0, s.z1);
+        if ((o.x - cx) * (o.x - cx) + (o.y - cz) * (o.y - cz) < r * r)
+            return true;
+    }
+    return false;
 }
 static bool windowAt(float x, float z) { // inside an unboarded window opening
     if (x < 0 || z < 0 || x >= MAP || z >= MAP)

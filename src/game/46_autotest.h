@@ -160,6 +160,43 @@ static void autotest() {
     if (getenv("NF_SCENE")) {
         if (atFrame == 20)
             SetWindowSize(1280, 720);
+        if (!strcmp(getenv("NF_SCENE"), "fence")) { // can a chasing zombie get over a fence between you?
+            static int zi = -1, tries = 0, crossed = 0;
+            static Vector2 fc;
+            static bool horiz;
+            P.hp = P.perks.maxhp;
+            P.iframe = 1;
+            if (atFrame == 25)
+                newGame();
+            if (atFrame >= 25 && (atFrame - 25) % 240 == 0) {
+                if (zi >= 0) {
+                    float side = horiz ? zombies[0].p.y - fc.y : zombies[0].p.x - fc.x;
+                    crossed += side > 0;
+                    printf("FENCE trial %d: %s\n", tries, side > 0 ? "over" : "stuck");
+                }
+                if (tries == 5) {
+                    printf("FENCE %d/5 got over\n", crossed);
+                    CloseWindow();
+                    exit(0);
+                }
+                int k = 0;
+                for (auto& sd : solids)
+                    if (sd.kind == SK_FENCE && sd.h < 1.5f && std::max(sd.x1 - sd.x0, sd.z1 - sd.z0) > 6 &&
+                        k++ == tries * 37) {
+                        horiz = sd.x1 - sd.x0 > sd.z1 - sd.z0;
+                        fc = V2((sd.x0 + sd.x1) / 2, (sd.z0 + sd.z1) / 2);
+                        break;
+                    }
+                zombies.clear();
+                P.p = Vector2Add(fc, horiz ? V2(0, 2.5f) : V2(2.5f, 0));
+                Zombie& z = spawnZ(Z_WALKER, Vector2Add(fc, horiz ? V2(0, -2.f) : V2(-2.f, 0)));
+                z.aggro = 30;
+                z.sees = true;
+                zi = 0;
+                tries++;
+            }
+            return;
+        }
         if (!strcmp(getenv("NF_SCENE"), "steps")) { // what footsteps hear across the map
             if (atFrame == 25) {
                 newGame();

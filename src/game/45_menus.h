@@ -137,19 +137,30 @@ static void drawSkills() {
 }
 static void drawPause() {
     dim(.6f);
-    float x = W / 2.f - 250, y = H * .35f;
+    float x = W / 2.f - 375, y = H * .35f;
+    static float savedT = -10;
     text("PAUSED", W / 2.f, y, 60, BONE, 1);
     if (button("RESUME", x, y + 100, 150, 46, true))
         state = ST_PLAY;
-    if (button("SETTINGS", x + 170, y + 100, 150, 46, false)) {
+    if (button("SETTINGS", x + 160, y + 100, 150, 46, false)) {
         settingsBack = ST_PAUSE;
         state = ST_SETTINGS;
     }
-    if (button("SAVE & QUIT", x + 340, y + 100, 170, 46, false)) {
+    if (button("SAVE", x + 320, y + 100, 120, 46, false)) {
         saveGame();
+        savedT = (float)GetTime();
+    }
+    if (button("QUIT", x + 450, y + 100, 120, 46, false)) {
+        if (cfg.permadeath)
+            saveGame(); // permadeath: no quitting your way out of a bad spot
         state = ST_TITLE;
     }
-    if (button("ABANDON RUN", x + 530, y + 100, 170, 46, false)) {
+    if (GetTime() - savedT < 2)
+        text("Saved.", x + 380, y + 156, 16, rgba(120, 200, 120), 1);
+    else
+        text(cfg.permadeath ? "Permadeath: quitting saves" : "Quit doesn't save. SAVE first.", x + 510, y + 156, 13,
+             STEEL, 1);
+    if (button("ABANDON RUN", x + 580, y + 100, 170, 46, false)) {
         deleteSave();
         state = ST_TITLE;
     }
@@ -184,7 +195,7 @@ static void drawSettings() {
         if (fpsOpt[i] == cfg.fps)
             fi = i;
     // rows shrink to fit the screen (14 rows + the BACK button); hints are dropped when there's no room for them
-    const float rowH = Clamp((H - y - 100) / 14.f, 36, 58);
+    const float rowH = Clamp((H - y - 100) / 15.f, 36, 58);
     auto row = [&](const char* label, const std::string& val, const char* hint) -> int {
         text(label, x, y + 8, 18, BONE);
         text(val, x + 420, y + 8, 18, SODIUM, 1);
@@ -252,6 +263,10 @@ static void drawSettings() {
                      "Low keeps the blood but no flying body parts. Extreme: more of everything.")))
             cfg.gore = (cfg.gore + d + 3) % 3;
     }
+    if ((d = row("Permadeath", cfg.permadeath ? "On" : "Off",
+                 cfg.permadeath ? "Death deletes your save. Quitting always saves."
+                                : "Death sends you back to your last save. Save often from the pause menu.")))
+        cfg.permadeath = !cfg.permadeath;
     if ((d = row("Auto-equip guns", cfg.autoEquip ? "On" : "Off",
                  "Switch to a gun as soon as you pick it up. Off keeps what you're holding.")))
         cfg.autoEquip ^= 1;
@@ -302,7 +317,15 @@ static void drawDead() {
         y += 22;
         text("Longest you've ever lasted.", x, y, 15, SODIUM);
     }
-    if (button("NEW LIFE", x, y + 40, 200, 50, true) || IsKeyPressed(KEY_ENTER))
+    if (button("NEW LIFE", x, y + 40, 200, 50, true) || IsKeyPressed(KEY_ENTER)) {
+        deleteSave();
         newGame();
+    }
+    if (!cfg.permadeath && hasSave() && button("LOAD LAST SAVE", x + 220, y + 40, 200, 50, false)) {
+        if (!loadGame()) {
+            deleteSave();
+            newGame();
+        }
+    }
     drawCursor();
 }

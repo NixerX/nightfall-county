@@ -18,7 +18,8 @@ static void die() {
     state = ST_DEAD;
     P.hp = 0;
     deadT = 0;
-    deleteSave(); /* permadeath: the save goes with you */
+    if (cfg.permadeath)
+        deleteSave(); // permadeath: the save goes with you
     int hrs = (int)(P.alive / CYCLE * 24);
     newRecord = hrs > bestHours || (hrs == bestHours && kills > bestKills);
     if (newRecord) {

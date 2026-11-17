@@ -60,6 +60,9 @@ struct Zombie {
     float hitT = 0, hitA = 0, hitK = 0; // last hit: time left, direction it pushed, strength
     float turnV = 0;                    // how fast it's turning (rad/s), for leaning into turns
     float vNow = 0;                     // actual speed (m/s), smoothed
+    float climbT = 0, fenceStuck = 0;   // climbing over a fence; how long it's been pressed against one
+    Vector2 mvFrom{};                   // where this frame's move started
+    float mvWant = 0;                   // how far it meant to go this frame
     float stumble = 0;                  // runners: tripping
     signed char cut[4] = {0, 0, 0, 0};  // arm L, arm R, leg L, leg R: 0 whole, 1 below the joint, 2 at the root
     float wnd[3] = {0, 0, 0};           // blood soaked: head, torso, legs (0..1)

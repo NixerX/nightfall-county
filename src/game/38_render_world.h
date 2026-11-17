@@ -24,7 +24,11 @@ static void zombiePose(const Zombie& z, PoseIn& pin) {
         pin.attack = 1 - z.atk / .3f;
     if (z.type == Z_BRUTE && z.chgW > 0)
         pin.crouch = .35f; // wind-up: drops low before the charge
-    if (z.hitT > 0) {      // shoved by the last hit
+    if (z.climbT > 0) {    // hauling itself over a fence
+        pin.crouch = .45f;
+        pin.stagger = 1;
+    }
+    if (z.hitT > 0) { // shoved by the last hit
         float rel = z.hitA - z.a, k = Clamp(z.hitT / .3f, 0, 1) * z.hitK;
         pin.hitZ = cosf(rel) * k;
         pin.hitX = -sinf(rel) * k;

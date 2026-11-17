@@ -376,7 +376,13 @@ static void updateZombies(float dt) {
         }
         if (crawler(z))
             sp *= z.type == Z_RUNNER ? .25f : .45f;
+        if (z.climbT > 0) { // clambering over a fence: slow
+            z.climbT -= dt;
+            sp *= .35f;
+        }
         Vector2 mv = polar(ang, sp * dt);
+        z.mvFrom = z.p;
+        z.mvWant = sp * dt;
         z.p = Vector2Add(z.p, mv);
         float wl = Vector2Length(mv);
         z.walk += wl;
@@ -406,7 +412,19 @@ static void updateZombies(float dt) {
                 z.p.y += ez / e * pp;
             }
         }
-        collide(z.p, z.r);
+        bool climbing = z.climbT > 0 || (z.fenceStuck < 0 && fenceNear(z.p, z.r * .6f));
+        collide(z.p, z.r, climbing);
+        if (!climbing && z.mvWant > .004f && Vector2Distance(z.p, z.mvFrom) < z.mvWant * .3f &&
+            fenceNear(z.p, z.r + .25f)) {
+            z.fenceStuck += dt; // pressed against a fence and getting nowhere: go over it
+            if (z.fenceStuck > .5f && !crawler(z) && z.type != Z_BLOATER) {
+                z.climbT = 1.2f;
+                z.fenceStuck = -1; // stays "over the fence" until it's clear of it
+            }
+        } else if (z.fenceStuck > 0)
+            z.fenceStuck = std::max(0.f, z.fenceStuck - dt);
+        else if (z.fenceStuck < 0 && z.climbT <= 0 && !fenceNear(z.p, z.r * .6f))
+            z.fenceStuck = 0;
         if (P.loft < 0 && P.roll <= 0 && P.vaultT <= 0) { // they get in your face, but they can't stand inside you
             Vector2 dv = Vector2Subtract(z.p, P.p);
             float pd = Vector2Length(dv), minD = z.r + .36f;
@@ -416,7 +434,7 @@ static void updateZombies(float dt) {
                 float zk = z.type == Z_BRUTE ? .25f : .7f;
                 z.p = Vector2Add(z.p, Vector2Scale(nrm, ov * zk));
                 P.p = Vector2Subtract(P.p, Vector2Scale(nrm, ov * (1 - zk)));
-                collide(z.p, z.r);
+                collide(z.p, z.r, z.climbT > 0 || z.fenceStuck < 0);
                 collide(P.p, .35f);
             }
         }
@@ -438,7 +456,7 @@ static void updateZombies(float dt) {
                     z.p.y += ez / e * pp;
                 }
             }
-            collide(z.p, z.r);
+            collide(z.p, z.r, z.climbT > 0 || z.fenceStuck < 0);
             continue;
         }
         bool facing = fabsf(angDiff(atan2f(dz, dx), z.a)) < 1.3f || d < z.r + .2f; // has to be turned toward you
