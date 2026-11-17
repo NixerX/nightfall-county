@@ -77,6 +77,7 @@ static void drawInventory() {
                 char b[48];
                 snprintf(b, 48, "%d/%d", P.gun[i].clip, P.gun[i].mag);
                 text(b, r.x + r.width - 6, r.y + 14, 12, STEEL, 2);
+                if (hov && IsKeyPressed(KEY_U) && P.gun[i].clip > 0) { int left = invAdd(ammoItem(P.gun[i].cal), P.gun[i].clip); msg(left ? "Pockets full: the rest stay in the gun." : "Unloaded.", STEEL); P.gun[i].clip = left; sfx(SFX_RELOAD, .5f); }
                 if (hov && rp) {
                     Loot o;
                     o.kind = LK_GUN;
