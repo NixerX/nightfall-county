@@ -152,6 +152,7 @@ int main() {
                 dodge();
             if (IsKeyPressed(KEY_R))
                 startReload();
+            if (IsKeyPressed(KEY_U) && curGun() && curGun()->clip > 0 && P.reload <= 0) { Weapon* w = curGun(); int left = invAdd(ammoItem(w->cal), w->clip); msg(left ? "Pockets full: the rest stay in the gun." : "Unloaded.", STEEL); w->clip = left; sfx(SFX_RELOAD, .5f); }
             if (IsKeyPressed(KEY_E))
                 interact();
             if (IsKeyPressed(KEY_B))
