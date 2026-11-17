@@ -1,6 +1,6 @@
 # PLAN: blood, visible damage and gore variety
 
-Proposed (Nov 2026). Not built yet.
+Built in v0.8.9 (Nov 2026).
 
 ## Where it stands
 

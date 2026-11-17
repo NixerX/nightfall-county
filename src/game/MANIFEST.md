@@ -90,12 +90,17 @@ Code style is set by `.clang-format` in the repo root (one statement per line). 
 
 `main()` (window setup, the main loop, state switching) stays in `src/main.cpp`.
 
+`src/poses.h` (outside src/game) builds every character pose in code: `buildPose` (player, zombie styles, crawl, corpse), `blendPose` (eases out pose jumps per character, state in `PoseState` on each Zombie, Corpse and the Player) and `solvePose`. `drawCharacter` in `06_gltf_assets.h` ties it together.
+
+Test scenes (autotest build, `-DNF_AUTOTEST`): `NF_SCENE=anim` and `NF_SCENE=gore` write close-up `lab_*.png` screenshots.
+
 ## Where to look
 
 - New setting: `02_settings.h` + `45_menus.h`
 - Weapon stats or affixes: `17_items.h`; what drops where: `26_loot_gen.h`
 - Zombie behaviour or difficulty: `34_zombie_ai.h`, `25_spawning.h`, `19_entities.h`
-- Damage and gore: `27_combat.h`
+- Damage and gore: `27_combat.h` (hit zones, dismember, gib patterns, body-part gibs), `24_effects.h` (spatter, streaks, wall splats)
+- Character movement: `src/poses.h`; zombie turn rates and gait speed: `34_zombie_ai.h`
 - Controls and moves: `33_update_player.h`, `31_actions.h`
 - Inventory screen: `41_inventory_ui.h`, `42_inventory_draw.h`
 - HUD: `40_hotbar.h`

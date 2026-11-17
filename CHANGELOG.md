@@ -1,5 +1,18 @@
 # Nightfall County changelog
 
+## v0.8.9
+- Characters move like people. Poses blend instead of snapping (swings, guards, aiming, crouching, walk to sprint). The walk is fixed: the swinging leg bends at the knee (it was the planted one) and feet no longer skate. Hips and shoulders move with the stride; standing characters breathe and shift their weight; guns bob as you walk; you lean into turns; hits shove the body the way they came.
+- Zombies shamble and lurch, some drag a foot, runners flail and trip, and you can feel a brute's footsteps. Their arms hang while they wander and come up when they spot you. Badly hurt ones reel.
+- Zombies can't turn on a dime: walkers are slow to come about and have to face you to attack, so juking works. Brutes are slower still; volatiles still spin.
+- Bodies topple over when they die (face first, onto their back, or crumpling at the knees) instead of appearing flat.
+- Blood goes where it should: streaks away from the hit, splatter and drips on walls, trails behind the wounded, bloody footprints if you walk through a pool. It dries from red to brown over a few hours.
+- Every weapon kills differently. Blades take limbs off clean and can take heads; bats cave heads in; shotguns shred and can take two limbs at close range; rifles spray out the far side. Explosions roll one of several messes (shredded, top half gone, one side blown off, or a red mist) and the odd one gets a beat of slow motion.
+- Flying limbs, heads and torsos are the zombie's own arm, leg, head or upper body now, not boxes.
+- Zombies get bloodier where they've been hit, so you can see which ones are close to dropping.
+- Shoot or chop off a leg and the zombie drops and crawls after you. Crawlers grab ankles.
+- Settings: Gore (Low / Normal / Extreme). Low keeps the blood but nothing flies.
+- Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
+
 ## v0.8.8
 - Countryside plots: shack lots, homesteads, family farms and big ranches, each sized and laid out to make sense. They face the road with a driveway and a gated, fenced yard; farms have barns, silos, tractors and fields; ranches add a machine shed and a corral. Some are kept up, some rundown, some abandoned.
 - Car alarms: searching a car can set off its alarm (about 1 in 9). It wails for ten seconds and draws a big, mostly slow crowd in from out of sight. Run, or smash the car with a melee weapon to shut it up.
