@@ -11,7 +11,7 @@ static Vector2 aimPoint() {
     return V2(r.position.x + r.direction.x * t, r.position.z + r.direction.z * t);
 }
 static Weapon* curGun() {
-    return P.active < 2 && P.hasGun[P.active] ? &P.gun[P.active] : nullptr;
+    return P.active != 2 && P.hasGun[P.active] ? &P.gun[P.active] : nullptr;
 }
 static int curGunHold() {
     Weapon* g = curGun();
@@ -47,7 +47,7 @@ static void finishReloadNow() {
 static void setActive(int i) {
     if (i == P.active)
         return;
-    if (i < 2 && !P.hasGun[i])
+    if (i != 2 && !P.hasGun[i])
         return;
     P.active = i;
     P.reload = 0;
@@ -732,7 +732,9 @@ static void pickUp() {
     }
     loot.erase(loot.begin() + nearLoot);
     if (l.kind == LK_GUN) {
-        int s = l.w.slot;
+        int s = l.w.slot; // long guns: first free of the two long slots, else the one in your hands (or long gun 1)
+        if (s == 0)
+            s = !P.hasGun[0] ? 0 : !P.hasGun[3] ? 3 : P.active == 3 ? 3 : 0;
         if (P.hasGun[s]) {
             Loot o;
             o.kind = LK_GUN;
@@ -749,7 +751,11 @@ static void pickUp() {
             P.reload = 0;
             msg("Equipped " + l.w.name, RARC[l.w.rar]);
         } else {
-            msg("Picked up " + l.w.name + " (slot " + std::to_string(s + 1) + ")", RARC[l.w.rar]);
+            msg("Picked up " + l.w.name +
+                    (s == 1   ? " (sidearm)"
+                     : s == 3 ? " (long gun 2)"
+                              : " (long gun)"),
+                RARC[l.w.rar]);
         }
         if (l.w.rar == 3)
             sfx(SFX_LEGEND, 1, 0);

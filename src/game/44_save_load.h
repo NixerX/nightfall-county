@@ -123,6 +123,9 @@ static void saveGame() {
     for (auto& c : carObjs)
         o << (int)c.searched + 2 * (int)c.blew << ' ';
     o << '\n';
+    o << "G3 " << P.hasGun[3] << '\n'; // long gun 2 (added later: optional, so older saves still load)
+    if (P.hasGun[3])
+        wGun(o, P.gun[3]);
     o << "END\n";
 }
 static bool loadGame() {
@@ -206,6 +209,23 @@ static bool loadGame() {
         }
     }
     in >> tag;
+    P.hasGun[3] = false;
+    if (tag == "G3") {
+        in >> P.hasGun[3];
+        if (P.hasGun[3])
+            P.gun[3] = rGun(in);
+        in >> tag;
+    }
+    { // older saves: give long gun 2 a hotbar key (first empty one)
+        bool on = false;
+        for (auto& h : hotbar)
+            on |= h.kind == 2 && h.id == 3;
+        for (int h = 0; h < 10 && !on; h++)
+            if (hotbar[h].kind == 0) {
+                hotbar[h] = {2, 3};
+                on = true;
+            }
+    }
     if (tag != "END") {
         msg("Save file looked damaged; some things may be off.", SODIUM);
     }

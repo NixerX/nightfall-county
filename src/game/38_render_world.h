@@ -503,7 +503,7 @@ static void renderWorld3D() {
                 setTexMode(0);
             }
             if (P.roll <= 0) {
-                if (g && !P.sprint) {
+                if (g) { // sprinting: still the gun, carried low (not the melee weapon)
                     int ga = gunAsset(g->key);
                     if (ga >= 0) {
                         float sc = gunScale(g->key, ga);

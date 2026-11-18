@@ -152,7 +152,13 @@ int main() {
                 dodge();
             if (IsKeyPressed(KEY_R))
                 startReload();
-            if (IsKeyPressed(KEY_L) && curGun() && curGun()->clip > 0 && P.reload <= 0) { Weapon* w = curGun(); int left = invAdd(ammoItem(w->cal), w->clip); msg(left ? "Pockets full: the rest stay in the gun." : "Unloaded.", STEEL); w->clip = left; sfx(SFX_RELOAD, .5f); }
+            if (IsKeyPressed(KEY_L) && curGun() && curGun()->clip > 0 && P.reload <= 0) {
+                Weapon* w = curGun();
+                int left = invAdd(ammoItem(w->cal), w->clip);
+                msg(left ? "Pockets full: the rest stay in the gun." : "Unloaded.", STEEL);
+                w->clip = left;
+                sfx(SFX_RELOAD, .5f);
+            }
             if (IsKeyPressed(KEY_E))
                 interact();
             if (IsKeyPressed(KEY_B))
@@ -187,9 +193,13 @@ int main() {
             if (IsKeyPressed(KEY_Q))
                 kick();
             if (wheel != 0 && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))) {
-                int dir = wheel > 0 ? 1 : 2;
-                for (int k = 1; k <= 3; k++) {
-                    int n = (P.active + k * dir) % 3;
+                static const int ORD[4] = {2, 1, 0, 3}; // melee, sidearm, long gun, long gun 2
+                int dir = wheel > 0 ? 1 : 3, at = 0;
+                for (int k = 0; k < 4; k++)
+                    if (ORD[k] == P.active)
+                        at = k;
+                for (int k = 1; k <= 4; k++) {
+                    int n = ORD[(at + k * dir) % 4];
                     if (n == 2 || P.hasGun[n]) {
                         setActive(n);
                         break;

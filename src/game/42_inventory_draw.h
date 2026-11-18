@@ -63,13 +63,15 @@ static void drawInventory() {
     float wy = dy + 72 + 5 * 62.f + 6;
     int hoverGun = -1;
     text("WEAPONS", dx + 14, wy, 12, STEEL);
-    for (int i = 0; i < 3; i++) {
-        Rectangle r = {dx + 14, wy + 18 + i * 40.f, dw - 28, 34};
+    static const int WROWS[4] = {2, 1, 0, 3}; // melee, sidearm, long gun, long gun 2
+    for (int row = 0; row < 4; row++) {
+        int i = WROWS[row];
+        Rectangle r = {dx + 14, wy + 18 + row * 40.f, dw - 28, 34};
         bool hov = CheckCollisionPointRec(m, r);
         DrawRectangleRec(r, hov ? rgba(30, 36, 46) : rgba(20, 24, 30));
         DrawRectangleLinesEx(r, 1, rgba(54, 60, 70));
-        if (i < 2) {
-            text(i == 0 ? "PRIMARY" : "SIDEARM", r.x + 6, r.y + 2, 10, rgba(110, 116, 126));
+        if (i != 2) {
+            text(i == 1 ? "SIDEARM" : i == 3 ? "LONG GUN 2" : "LONG GUN", r.x + 6, r.y + 2, 10, rgba(110, 116, 126));
             if (P.hasGun[i]) {
                 if (hov && !drag.on && !ctxMenu.on)
                     hoverGun = i;
@@ -112,9 +114,9 @@ static void drawInventory() {
             }
         }
     }
-    text("Right-click a weapon to drop it", dx + 14, wy + 140, 11, rgba(110, 116, 126));
+    text("Right-click a weapon to drop it, L to unload", dx + 14, wy + 180, 11, rgba(110, 116, 126));
     {
-        float sy = wy + 162;
+        float sy = wy + 202;
         text("SETS", dx + 14, sy, 12, STEEL);
         sy += 16;
         bool any = false;

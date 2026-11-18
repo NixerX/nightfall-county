@@ -252,7 +252,9 @@ static void doAct(const Act& a) {
     }
 }
 static void interact() {
-    if (nearLoot >= 0 && !(nearAct.kind == A_DOOR && Vector2Distance(doorObjs[nearAct.idx].c, P.p) < Vector2Distance(V2(loot[nearLoot].p.x, loot[nearLoot].p.z), P.p))) { // a closer door wins
+    if (nearLoot >= 0 && !(nearAct.kind == A_DOOR && Vector2Distance(doorObjs[nearAct.idx].c, P.p) <
+                                                         Vector2Distance(V2(loot[nearLoot].p.x, loot[nearLoot].p.z),
+                                                                         P.p))) { // a closer door wins
         pickUp();
         return;
     }

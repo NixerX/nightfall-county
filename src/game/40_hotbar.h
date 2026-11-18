@@ -1,7 +1,7 @@
 // Nightfall County: hotbar.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
-// ---- hotbar: keys 1-0. Weapons sit in 1-3 by default; drag anything else onto a slot in the inventory
+// ---- hotbar: keys 1-0. Weapons sit in 1-4 by default; drag anything else onto a slot in the inventory
 struct HotSlot {
     int kind = 0, id = -1;
 };
@@ -9,12 +9,13 @@ static HotSlot hotbar[10]; // kind 0 empty, 1 item, 2 weapon slot
 static void resetHotbar() {
     for (auto& h : hotbar)
         h = {};
-    hotbar[0] = {2, 0};
-    hotbar[1] = {2, 1};
-    hotbar[2] = {2, 2};
-    hotbar[3] = {1, IT_BANDAGE};
-    hotbar[4] = {1, IT_RAG};
-    hotbar[5] = {1, IT_WATER};
+    hotbar[0] = {2, 2}; // melee
+    hotbar[1] = {2, 1}; // sidearm
+    hotbar[2] = {2, 0}; // long gun
+    hotbar[3] = {2, 3}; // long gun 2
+    hotbar[4] = {1, IT_BANDAGE};
+    hotbar[5] = {1, IT_RAG};
+    hotbar[6] = {1, IT_WATER};
 }
 static Rectangle hotRect(int i) {
     float sw = 50, x0 = W / 2.f - sw * 5;
@@ -59,7 +60,7 @@ static void drawHotbar(bool inv) {
                 nm = P.gun[h.id].name;
                 c = RARC[P.gun[h.id].rar];
             } else {
-                nm = h.id ? "sidearm" : "primary";
+                nm = h.id == 1 ? "sidearm" : h.id == 3 ? "long gun 2" : "long gun";
                 c = rgba(90, 96, 106);
             }
         } else if (h.kind == 1) {
@@ -259,14 +260,24 @@ static void drawHUD() {
             bar(rx - 180, by + 90, 180, 4, 1 - P.reload * P.perks.reload / g->rel, BONE);
     } else
         text(MB[P.melee].n, rx, by + 40, 26, BONE, 2);
-    for (int i = 0; i < 3; i++) {
-        float y = by - 34 + i * 20 - 30;
+    static const int ROWS[4] = {2, 1, 0, 3}; // melee, sidearm, long gun, long gun 2
+    for (int k = 0; k < 4; k++) {
+        int i = ROWS[k];
+        float y = by - 54 + k * 20 - 30;
         bool c = i == P.active;
-        std::string nm =
-            i < 2 ? (P.hasGun[i] ? P.gun[i].name : (i == 0 ? "- primary -" : "- sidearm -")) : MB[P.melee].n;
-        Color cc = i < 2 && P.hasGun[i] ? RARC[P.gun[i].rar] : BONE;
-        text(std::string(c ? "> " : "") + std::to_string(i + 1) + "  " + nm, rx, y, c ? 15.f : 13.f,
-             c ? cc : withA(cc, .5f), 2);
+        std::string nm = i != 2 ? (P.hasGun[i] ? P.gun[i].name
+                                               : (i == 1   ? "- sidearm -"
+                                                  : i == 3 ? "- long gun 2 -"
+                                                           : "- long gun -"))
+                                : MB[P.melee].n;
+        Color cc = i != 2 && P.hasGun[i] ? RARC[P.gun[i].rar] : BONE;
+        std::string key = "-";
+        for (int h = 0; h < 10; h++)
+            if (hotbar[h].kind == 2 && hotbar[h].id == i) {
+                key = std::to_string((h + 1) % 10);
+                break;
+            }
+        text(std::string(c ? "> " : "") + key + "  " + nm, rx, y, c ? 15.f : 13.f, c ? cc : withA(cc, .5f), 2);
     }
     text("FLARES " + std::to_string(invCount(IT_FLARE)) + "   PIPE BOMBS " + std::to_string(invCount(IT_PIPEBOMB)), rx,
          by + 106, 12, STEEL, 2);

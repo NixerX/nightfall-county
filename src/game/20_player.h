@@ -20,8 +20,8 @@ struct Player {
     int bleeds = 0;
     float sick = 0, pain = 0, shiver = 0;
     bool broken = false;
-    Weapon gun[2];
-    bool hasGun[2] = {false, false};
+    Weapon gun[4]; // 0 long gun, 1 sidearm, 2 unused (index 2 means melee in P.active), 3 long gun 2
+    bool hasGun[4] = {false, false, false, false};
     int melee = MK_FISTS;
     int active = 2;
     std::shared_ptr<Cloth> eq[CS_COUNT];

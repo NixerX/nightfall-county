@@ -60,7 +60,7 @@ Dying ends that character and that map.
 | Ctrl (hold) | Stand still and attack where you aim |
 | E | Pick up / open and close doors / climb hayloft ladders / search cars / feed a fire |
 | B / N | Quick bandage / best meds for what's wrong (splint, morphine, antibiotics, painkillers) |
-| 1-0 | Hotbar (weapons in 1-3 by default) |
+| 1-0 | Hotbar (1 melee, 2 sidearm, 3 long gun, 4 long gun 2 by default) |
 | Ctrl+wheel | Cycle weapons |
 | Mouse wheel | Zoom |
 | F11 | Fullscreen |
