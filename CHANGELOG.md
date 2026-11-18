@@ -20,6 +20,8 @@
 - Zombies that walk into a fire catch it and burn for 6-9 s (about 9 damage a second: most walkers drop, brutes come out cooked but standing). Burning zombies set others alight when they bump into them, and scorch you if they get within arm's reach (3 damage every 0.6 s, no bleeding or infection). Bloaters don't catch.
 - Fixed: melee clicks got eaten. Clicking while your weapon was still recovering (or while out of breath) used up the click, so nothing happened until you let go and clicked again; in a runner fight most swings vanished. Now a click held through the recovery swings the moment you're ready, and being too winded to swing says so.
 - Loot labels never overlap: the item you'd pick up keeps its spot, the rest slide to the nearest free space with a thin line back to their item.
+- Loot sparkles: every item on screen has a small twinkling diamond (rarity colour for guns and clothes). Labels stay hidden except the one you'd pick up; hold Alt to show them all (Diablo style). The inventory's GROUND panel reaches 3.5 m (was 2.6) and never through walls. Hold position is Ctrl only now.
+- L unloads guns (in hand, or hover a weapon slot in the inventory). U stays flashlight UV mode.
 - Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 

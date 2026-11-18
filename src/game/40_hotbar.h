@@ -301,6 +301,29 @@ static void drawHUD() {
     int zClose = 0;
     for (auto& z : zombies)
         zClose += !z.dead && Vector2DistanceSqr(z.p, P.p) < 100;
+    { // every item on screen twinkles: a small diamond, now and then a star glint (rarity colour for guns and clothes)
+        float tm = (float)GetTime();
+        for (int i = 0; i < (int)loot.size(); i++) {
+            const Loot& l = loot[i];
+            if (lootHidden(l) || Vector2DistanceSqr(V2(l.p.x, l.p.z), P.p) > 30 * 30)
+                continue;
+            Vector2 s = GetWorldToScreen(Vector3Add(l.p, V3(0, .25f, 0)), cam3);
+            if (s.x < -10 || s.y < -10 || s.x > W + 10 || s.y > H + 10)
+                continue;
+            Color c = l.kind == LK_GUN                     ? RARC[l.w.rar]
+                      : l.kind == LK_CLOTH && l.c->rar > 0 ? RARC[l.c->rar]
+                                                           : rgba(255, 236, 190);
+            float ph = sinf(tm * 2.2f + i * 1.7f);
+            DrawPoly(s, 4, 3.f + ph * .8f, 45, withA(c, .45f + .25f * ph));
+            float g = sinf(tm * 1.3f + i * 2.9f); // occasional glint
+            if (g > .85f) {
+                float k = (g - .85f) / .15f, r = 3 + 7 * k;
+                Color gc = withA(c, .9f * k);
+                DrawLineEx({s.x - r, s.y}, {s.x + r, s.y}, 1.5f, gc);
+                DrawLineEx({s.x, s.y - r}, {s.x, s.y + r}, 1.5f, gc);
+            }
+        }
+    }
     // labels are laid out so they never overlap: the one you'd pick up first, then nearest to farthest; each slides up
     // or down to the closest free spot, with a thin line back to its item when it had to move
     struct LLab {
@@ -313,7 +336,9 @@ static void drawHUD() {
     for (int i = 0; i < (int)loot.size(); i++) {
         const Loot& l = loot[i];
         float d = Vector2Distance(V2(l.p.x, l.p.z), P.p);
-        if (d > (zClose >= 2 ? 1.5f : 7) || lootHidden(l))
+        // labels: only the one you'd pick up, unless Alt is held (all within 15 m; in a fight, only what's at your feet)
+        bool showAll = IsKeyDown(KEY_LEFT_ALT) && state == ST_PLAY;
+        if (lootHidden(l) || (i != nearLoot && (!showAll || d > (zClose >= 2 ? 1.5f : 15))))
             continue;
         labs.push_back({i, GetWorldToScreen(Vector3Add(l.p, V3(0, .4f, 0)), cam3), i == nearLoot ? -1 : d, 0,
                         i == nearLoot ? 38.f : 18.f, 0});

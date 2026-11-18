@@ -23,8 +23,8 @@ static void drawTitle() {
                              {"Shift / C", "Sprint / crouch"},
                              {"Space", "Dodge roll"},
                              {"RMB / Q", "Block / kick"},
-                             {"R", "Reload"},
-                             {"E", "Pick up / use"},
+                             {"R / L", "Reload / unload"},
+                             {"E / hold Alt", "Pick up / use, show all loot"},
                              {"1-0 / Ctrl+Wheel", "Hotbar / weapons (wheel zooms)"},
                              {"Tab", "Backpack (eat, drink, bandage)"},
                              {"F / U", "Flashlight / UV mode"},
@@ -244,7 +244,7 @@ static void drawSettings() {
         static const char* CH[3] = {
             "W/A/S/D are fixed compass directions; two keys for diagonals.",
             "W walks toward the cursor, S backs off, A/D circle around it.",
-            "Diablo style: click to walk, click a zombie to attack it, click loot to grab it. Hold Ctrl (or Alt) to stand still and attack where you click."};
+            "Diablo style: click to walk, click a zombie to attack it, click loot to grab it. Hold Ctrl to stand still and attack where you click. Hold Alt to show all loot."};
         if ((d = row("Controls", CN[cfg.controls], CH[cfg.controls])))
             cfg.controls = (cfg.controls + d + 3) % 3;
     }

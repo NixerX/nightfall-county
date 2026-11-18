@@ -55,6 +55,9 @@ Dying ends that character and that map.
 | Space | Vault a low fence/crate/car/rock in front of you; otherwise dodge roll |
 | V / MMB | Melee |
 | R | Reload (pulls rounds of the right caliber from your backpack) |
+| L | Unload the gun in your hand (or hover a weapon slot in the inventory and press L) |
+| Hold Alt | Show every loot label within 15 m |
+| Ctrl (hold) | Stand still and attack where you aim |
 | E | Pick up / open and close doors / climb hayloft ladders / search cars / feed a fire |
 | B / N | Quick bandage / best meds for what's wrong (splint, morphine, antibiotics, painkillers) |
 | 1-0 | Hotbar (weapons in 1-3 by default) |
