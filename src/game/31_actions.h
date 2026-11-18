@@ -320,7 +320,7 @@ static bool fire() {
     for (int i = 0; i < w.pel; i++) {
         float a = P.a + frand(-w.spread, w.spread) * sm, sp = w.spd * frand(.94f, 1.04f);
         Bullet b{};
-        b.p = m0;
+        b.p = Vector2Add(P.p, polar(a, .3f)); // from your body, not the muzzle: zombies in your face get hit too
         b.v = polar(a, sp);
         b.dmg = w.dmg * P.perks.dmg *
                 (w.key == W_SHOTGUN ? P.perks.shotgun

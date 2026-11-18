@@ -22,6 +22,7 @@
 - Loot labels never overlap: the item you'd pick up keeps its spot, the rest slide to the nearest free space with a thin line back to their item.
 - Loot sparkles: every item on screen has a small twinkling diamond (rarity colour for guns and clothes). Labels stay hidden except the one you'd pick up; hold Alt to show them all (Diablo style). The inventory's GROUND panel reaches 3.5 m (was 2.6) and never through walls. Hold position is Ctrl only now.
 - L unloads guns (in hand, or hover a weapon slot in the inventory). U stays flashlight UV mode.
+- Fixed: point-blank shots missed. Bullets started at the muzzle (1.3 m out for a shotgun), past any zombie already on top of you, so a runner in your face could take a whole tube of buckshot without a scratch. Shots now start at your body.
 - Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 
