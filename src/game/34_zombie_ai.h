@@ -101,9 +101,27 @@ static void updateZombies(float dt) {
         z.lureT -= dt;
         z.losT -= dt;
         z.ignoreT -= dt;
+        if (z.burn <= 0 && z.type != Z_BLOATER) // walked into a fire: it goes up
+            for (auto& f : fires)
+                if (f.fuel > 0 && Vector2DistanceSqr(z.p, f.p) < (z.r + .45f) * (z.r + .45f)) {
+                    z.burn = frand(6, 9);
+                    break;
+                }
         if (z.burn > 0) {
             z.burn -= dt;
-            hurtZ(z, 12 * dt, false, -999, true);
+            hurtZ(z, 9 * dt, false, -999, true);
+            for (auto& o : zombies) // brushing up against others lights them too
+                if (&o != &z && !o.dead && o.burn <= 0 && o.type != Z_BLOATER &&
+                    Vector2DistanceSqr(o.p, z.p) < (z.r + o.r + .15f) * (z.r + o.r + .15f) && chance(dt * 1.5f))
+                    o.burn = frand(5, 8);
+            static float scorchT = 0; // and they scorch you if they get close
+            scorchT -= dt;
+            if (scorchT <= 0 && P.hp > 0 && Vector2Distance(z.p, P.p) < z.r + .8f) {
+                scorchT = .6f;
+                hitPlayer(3, z.p, 99);
+                if (chance(.3f))
+                    msg("It's on fire! Back off!", rgba(255, 150, 60));
+            }
             if (chance(dt * 18))
                 parts.push_back({xz3(Vector2Add(z.p, V2(frand(-.3f, .3f), frand(-.3f, .3f))), frand(.5f, 1.6f)),
                                  V3(0, frand(1, 2.5f), 0), .5f, .5f, frand(.1f, .2f), rgba(255, 150, 50), P_FIRE});
