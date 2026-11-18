@@ -1,6 +1,7 @@
 // Nightfall County: inventory draw.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+static int wDrag = -1; // weapon slot being dragged onto the hotbar (-1: none)
 static void drawInventory() {
     DrawRectangle(0, 0, W, H, rgba(5, 6, 9, 160));
     Vector2 m = GetMousePosition();
@@ -68,6 +69,8 @@ static void drawInventory() {
         int i = WROWS[row];
         Rectangle r = {dx + 14, wy + 18 + row * 40.f, dw - 28, 34};
         bool hov = CheckCollisionPointRec(m, r);
+        if (hov && lp && !drag.on && !ctxMenu.on) // drag a weapon onto any hotbar key
+            wDrag = i;
         DrawRectangleRec(r, hov ? rgba(30, 36, 46) : rgba(20, 24, 30));
         DrawRectangleLinesEx(r, 1, rgba(54, 60, 70));
         if (i != 2) {
@@ -114,7 +117,7 @@ static void drawInventory() {
             }
         }
     }
-    text("Right-click a weapon to drop it, L to unload", dx + 14, wy + 180, 11, rgba(110, 116, 126));
+    text("Drag a weapon onto the bar. Right-click to drop, L to unload", dx + 14, wy + 180, 11, rgba(110, 116, 126));
     {
         float sy = wy + 202;
         text("SETS", dx + 14, sy, 12, STEEL);
@@ -464,6 +467,30 @@ static void drawInventory() {
         }
     }
     drawHotbar(true);
+    if (wDrag >= 0) { // a weapon being dragged to the hotbar: drop it on a key to bind it there (and only there)
+        std::string nm = wDrag == 2        ? MB[P.melee].n
+                         : P.hasGun[wDrag] ? P.gun[wDrag].name
+                                           : (wDrag == 1   ? "sidearm"
+                                              : wDrag == 3 ? "long gun 2"
+                                                           : "long gun");
+        float tw = textW(nm, 13) + 14;
+        DrawRectangleRec({m.x - tw / 2, m.y - 12, tw, 24}, rgba(30, 36, 46, 230));
+        DrawRectangleLinesEx({m.x - tw / 2, m.y - 12, tw, 24}, 1, SODIUM);
+        text(nm, m.x, m.y - 7, 13, BONE, 1);
+        if (lr) {
+            for (int k = 0; k < 10; k++)
+                if (CheckCollisionPointRec(m, hotRect(k))) {
+                    for (auto& h : hotbar)
+                        if (h.kind == 2 && h.id == wDrag)
+                            h = {};
+                    hotbar[k] = {2, wDrag};
+                    sfx(SFX_PICK, .3f);
+                    break;
+                }
+            wDrag = -1;
+        } else if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            wDrag = -1;
+    }
     // --- drag & drop
     if (drag.on) {
         if (IsKeyPressed(KEY_R))

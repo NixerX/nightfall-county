@@ -26,6 +26,7 @@
 - Big hits stop a charging brute: every hit during the charge cuts it short by its damage, so a point-blank shotgun blast or an axe hit leaves it staggered and dazed for 2 s. Pistol rounds slow it but won't stop it alone.
 - A second long-gun slot: carry a melee weapon, a sidearm and two long guns (say a shotgun and a hunting rifle). New hotbar default: 1 melee, 2 sidearm, 3 long gun, 4 long gun 2 (older saves get long gun 2 on the first free key). Picking up a long gun fills whichever long slot is empty; with both full it swaps out the one in your hands.
 - Fixed: sprinting with a gun showed your melee weapon in your hand.
+- Weapons can go on any hotbar key: drag one from the inventory's WEAPONS list onto the bar. Each weapon lives on one key; dragging it moves it.
 - Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 
