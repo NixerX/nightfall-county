@@ -448,6 +448,14 @@ static void hurtZ(Zombie& z, float dmg, bool head, float ang, bool dot, float di
             z.hitT = .3f;
             z.hitA = ang;
             z.hitK = Clamp(dmg / 40.f, .35f, 1.f) * (z.type == Z_BRUTE ? .4f : 1);
+            if (z.type == Z_BRUTE && z.chgT > 0) { // big hits stop a charge: it stumbles, dazed (shotgun blast, axe)
+                z.chgT -= dmg / 100.f;
+                if (z.chgT <= 0) {
+                    z.chgT = 0;
+                    z.stun = std::max(z.stun, 2.f);
+                    floatText(xz3(z.p, 2.3f), "STAGGERED", rgba(255, 210, 63), 14);
+                }
+            }
             float kb = z.type == Z_BRUTE ? .6f : z.type == Z_VOLATILE ? 1.5f : 3.f;
             z.k = Vector2Add(z.k, polar(ang, kb));
             impactBlood(z.p, ZT[z.type].h, ang, dmg, head, hitStyle, z.type == Z_BLOATER);
