@@ -507,8 +507,8 @@ static void updatePlayer(float dt) {
     }
     if (md && !P.fired) {
         if (P.active == 2) {
-            melee();
-            P.fired = true;
+            if (melee()) // a click during the recovery isn't lost: it swings as soon as you're ready
+                P.fired = true;
         } else if (fire())
             P.fired = !curGun()->autoF;
     }

@@ -177,10 +177,19 @@ static void kick() {
             } // boot a closed door open
     noiseAt(P.p, 8 * P.perks.noise);
 }
-static void melee() {
+// returns false when no swing happened (still recovering, rolling, blocking, out of breath), so the click isn't used up
+static bool melee() {
     const MBase& m = MB[P.melee];
-    if (P.swingCd > 0 || P.roll > 0 || P.sta < m.sta * STA_K || P.blocking)
-        return;
+    if (P.swingCd > 0 || P.roll > 0 || P.blocking)
+        return false;
+    if (P.sta < m.sta * STA_K) {
+        static float tiredMsgT = -10;
+        if (GetTime() - tiredMsgT > 2) {
+            msg("Too winded to swing. Back off and catch your breath.", STEEL);
+            tiredMsgT = (float)GetTime();
+        }
+        return false;
+    }
     P.sta -= m.sta * STA_K;
     P.staD = .6f;
     if (alarm.on && Vector2Distance(P.p, alarm.p) < 3.5f) {
@@ -286,6 +295,7 @@ static void melee() {
         }
     }
     noiseAt(P.p, 6 * P.perks.noise);
+    return true;
 }
 static bool fire() {
     Weapon* wp = curGun();
