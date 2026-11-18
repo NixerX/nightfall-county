@@ -21,8 +21,8 @@
 - [ ] Healing: maybe drop the "healthy" bar from 45 to 30 food/water.
 - [ ] Settings toggle: "Pause when unfocused" On/Off (copy the Auto-equip setting pattern).
 - [ ] Backpack only shows on the character when one is equipped.
-- [ ] Stacked loot labels readable.
-- [ ] Quit auto-saves (permadeath style), Save as its own button.
+- [x] Stacked loot labels readable.
+- [x] Quit auto-saves (permadeath style), Save as its own button.
 - [ ] Clearer bundled font for Windows builds (pick a free font, e.g. Inter or Roboto).
 
 ## Ideas (not scheduled)

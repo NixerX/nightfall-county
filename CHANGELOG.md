@@ -19,6 +19,7 @@
 - Cut bushes with any blade for dry sticks (kindling), up to three cuts a bush. First time near a tree with an axe or a bush with a blade, a tip tells you how (chopping trees for logs, and splitting logs into kindling, were already in but never mentioned).
 - Zombies that walk into a fire catch it and burn for 6-9 s (about 9 damage a second: most walkers drop, brutes come out cooked but standing). Burning zombies set others alight when they bump into them, and scorch you if they get within arm's reach (3 damage every 0.6 s, no bleeding or infection). Bloaters don't catch.
 - Fixed: melee clicks got eaten. Clicking while your weapon was still recovering (or while out of breath) used up the click, so nothing happened until you let go and clicked again; in a runner fight most swings vanished. Now a click held through the recovery swings the moment you're ready, and being too winded to swing says so.
+- Loot labels never overlap: the item you'd pick up keeps its spot, the rest slide to the nearest free space with a thin line back to their item.
 - Footsteps sound like what you're walking on: grass, leaf litter, moss, dirt, gravel, sand, pavement, wood floors, store tile, concrete slabs and carpet upstairs. Roads sound paved, gravel or dirt by type. In the rain, outdoor steps splash (mud squelches more). Brute footfalls follow the ground too.
 - Fixed: lost arms stretched skin down to the feet; the Settings BACK button was off the bottom of the screen at 720p.
 

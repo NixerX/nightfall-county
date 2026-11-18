@@ -301,25 +301,66 @@ static void drawHUD() {
     int zClose = 0;
     for (auto& z : zombies)
         zClose += !z.dead && Vector2DistanceSqr(z.p, P.p) < 100;
+    // labels are laid out so they never overlap: the one you'd pick up first, then nearest to farthest; each slides up
+    // or down to the closest free spot, with a thin line back to its item when it had to move
+    struct LLab {
+        int i;
+        Vector2 s;
+        float d, w, h, y;
+    };
+    static std::vector<LLab> labs;
+    labs.clear();
     for (int i = 0; i < (int)loot.size(); i++) {
         const Loot& l = loot[i];
-        if (Vector2Distance(V2(l.p.x, l.p.z), P.p) > (zClose >= 2 ? 1.5f : 7) || lootHidden(l))
+        float d = Vector2Distance(V2(l.p.x, l.p.z), P.p);
+        if (d > (zClose >= 2 ? 1.5f : 7) || lootHidden(l))
             continue;
-        Vector2 s = GetWorldToScreen(Vector3Add(l.p, V3(0, .4f, 0)), cam3);
-        std::string nm = l.kind == LK_GUN     ? l.w.name
-                         : l.kind == LK_MELEE ? MB[l.id].n
-                         : l.kind == LK_CLOTH
-                             ? l.c->name
-                             : std::string(IDEF[l.id].n) + (l.count > 1 ? " x" + std::to_string(l.count) : "");
+        labs.push_back({i, GetWorldToScreen(Vector3Add(l.p, V3(0, .4f, 0)), cam3), i == nearLoot ? -1 : d, 0,
+                        i == nearLoot ? 38.f : 18.f, 0});
+    }
+    std::sort(labs.begin(), labs.end(), [](const LLab& a, const LLab& b) {
+        return a.d < b.d;
+    });
+    auto labName = [&](int i) {
+        const Loot& l = loot[i];
+        return l.kind == LK_GUN     ? l.w.name
+               : l.kind == LK_MELEE ? std::string(MB[l.id].n)
+               : l.kind == LK_CLOTH ? l.c->name
+                                    : std::string(IDEF[l.id].n) + (l.count > 1 ? " x" + std::to_string(l.count) : "");
+    };
+    for (size_t k = 0; k < labs.size(); k++) {
+        LLab& L = labs[k];
+        L.w = textW(labName(L.i), 12) + 10;
+        float best = L.s.y;
+        for (int t = 0; t < 24; t++) { // 0, +1, -1, +2, -2 ... label heights away
+            float y = L.s.y + (t == 0 ? 0 : ((t + 1) / 2) * 20.f * (t % 2 ? 1 : -1));
+            bool clear = true;
+            for (size_t q = 0; q < k && clear; q++) {
+                const LLab& o = labs[q];
+                if (fabsf(L.s.x - o.s.x) < (L.w + o.w) / 2 + 4 && y - 9 < o.y - 9 + o.h + 2 &&
+                    o.y - 9 < y - 9 + L.h + 2)
+                    clear = false;
+            }
+            if (clear) {
+                best = y;
+                break;
+            }
+        }
+        L.y = best;
+    }
+    for (auto& L : labs) {
+        const Loot& l = loot[L.i];
+        std::string nm = labName(L.i);
         Color c = l.kind == LK_GUN                     ? RARC[l.w.rar]
                   : l.kind == LK_CLOTH && l.c->rar > 0 ? RARC[l.c->rar]
-                  : i == nearLoot                      ? BONE
+                  : L.i == nearLoot                    ? BONE
                                                        : rgba(200, 200, 190, 170);
-        float w = textW(nm, 12) + 10;
-        DrawRectangleRec({s.x - w / 2, s.y - 9, w, 18}, rgba(8, 10, 14, i == nearLoot ? 220 : 140));
-        text(nm, s.x, s.y - 7, 12, c, 1, false);
-        if (i == nearLoot)
-            text("[E] Take", s.x, s.y + 12, 13, SODIUM, 1);
+        if (fabsf(L.y - L.s.y) > 2) // moved: a thin line back to the item
+            DrawLineEx({L.s.x, L.s.y + 6}, {L.s.x, L.y + (L.y < L.s.y ? 9.f : -9.f)}, 1, rgba(200, 200, 190, 90));
+        DrawRectangleRec({L.s.x - L.w / 2, L.y - 9, L.w, 18}, rgba(8, 10, 14, L.i == nearLoot ? 220 : 160));
+        text(nm, L.s.x, L.y - 7, 12, c, 1, false);
+        if (L.i == nearLoot)
+            text("[E] Take", L.s.x, L.y + 12, 13, SODIUM, 1);
     }
     if (nearLoot >= 0 && nearLoot < (int)loot.size() && loot[nearLoot].kind == LK_GUN) {
         const Weapon& nw = loot[nearLoot].w;
