@@ -21,6 +21,11 @@
 - [ ] Gas: jerry cans (item already exists, no use yet), siphon from intact cars, pour trails/pools, drop a full can as a bomb (movie rules: a gunshot sets it off), molotov (bottle + rag + gas, first crafting recipe). Ignites from flares, fires, explosions, burning zombies.
 - [ ] Flashlight blocked by walls when Shadows is Off (~16 rays against walls, cut the beam in the shader).
 - [ ] Windows release build without the console window (CMake WIN32 / mainCRTStartup), log to a file instead.
+- [ ] ABANDON RUN (pause menu, 45_menus.h): confirm first ("Are you sure? This deletes your save"). With Permadeath Off it should just quit to the title and keep the save; only delete under Permadeath On.
+- [ ] Gun noise by gun: every shot currently pulls the whole area (`noiseAt` in `fire()`, 31_actions.h). Give each gun its own noise radius (pistols medium, shotgun and rifles far, scaled by caliber), so a pistol shot doesn't empty three towns.
+- [ ] Suppressors: rare loot, fit pistols and the MP5, cut a gun's noise radius a lot (a weapon affix or an attachment item).
+- [ ] Crossbow and bow: near-silent ranged weapons, slow to reload, arrows/bolts can be picked back up (they stick in zombies and drop on the corpse or ground).
+- [ ] Thrown knives: cheap quiet option, stack, can be picked back up.
 
 ### Z4 / Aider queue (small, one file each)
 - [ ] Volatiles kill too fast on Normal: tune speed / damage / bleed chance.
