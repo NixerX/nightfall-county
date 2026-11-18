@@ -16,6 +16,12 @@
 ### Check
 - [ ] Driveways: make sure the dirt/gravel lane from each plot's door to the road is visible (the fence gate gap is there).
 
+### Next build batch
+- [ ] Rain warning ("the rain is putting the fire out") fires for burning wrecks too: wreck fires go into the same `fires` list as campfires. Add a `bool wreck` (or `camp`) flag to `Fire` (21_state.h), set it where wrecks push their fire (35_update_world.h `fires.push_back({c.p, 90})`), and only warn for campfires. Same check anywhere else a fire is treated as a campfire (feeding prompts, warmth).
+- [ ] Gas: jerry cans (item already exists, no use yet), siphon from intact cars, pour trails/pools, drop a full can as a bomb (movie rules: a gunshot sets it off), molotov (bottle + rag + gas, first crafting recipe). Ignites from flares, fires, explosions, burning zombies.
+- [ ] Flashlight blocked by walls when Shadows is Off (~16 rays against walls, cut the beam in the shader).
+- [ ] Windows release build without the console window (CMake WIN32 / mainCRTStartup), log to a file instead.
+
 ### Z4 / Aider queue (small, one file each)
 - [ ] Volatiles kill too fast on Normal: tune speed / damage / bleed chance.
 - [ ] Healing: maybe drop the "healthy" bar from 45 to 30 food/water.
