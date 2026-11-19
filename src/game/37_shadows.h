@@ -111,7 +111,8 @@ static void renderShadows() {
         return;
     Vector3 sd = sunDirNow();
     float vr = 48 / camZoom, ext = 2 * vr + 24, texel = ext / SHADOW_N;
-    Vector3 tgt = V3(roundf(camPos.x / texel) * texel, 0, roundf((camPos.y - 5) / texel) * texel);
+    Vector2 sc = Vector2Add(camPos, camRot(V2(0, -5))); // a bit ahead of the camera, whichever way it faces
+    Vector3 tgt = V3(roundf(sc.x / texel) * texel, 0, roundf(sc.y / texel) * texel);
     Camera3D lc{};
     lc.target = tgt;
     lc.position = Vector3Subtract(tgt, Vector3Scale(sd, 200));

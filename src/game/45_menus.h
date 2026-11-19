@@ -33,15 +33,17 @@ static void drawTitle() {
                              {"Z / K", "Class skill / skill trees"},
                              {"B / N", "Bandage / best meds"},
                              {"X", "Autorun"},
-                             {"P / Esc", "Pause"}};
-    for (int i = 0; i < 16; i++) {
+                             {"P / Esc", "Pause"},
+                             {"MMB drag / , .", "Turn camera (PgUp/Dn tilt, End reset)"}};
+    const int nk = sizeof keys / sizeof *keys;
+    for (int i = 0; i < nk; i++) {
         float cx = x + (i % 2) * 380, cy = y + (i / 2) * 26;
         DrawRectangleRec({cx, cy - 2, 110, 22}, rgba(18, 22, 30));
         DrawRectangleLinesEx({cx, cy - 2, 110, 22}, 1, rgba(60, 68, 80));
         text(keys[i][0], cx + 55, cy, 13, BONE, 1, false);
         text(keys[i][1], cx + 122, cy, 15, rgba(199, 194, 182));
     }
-    y += 8 * 26 + 22;
+    y += ((nk + 1) / 2) * 26 + 22;
     if (hasSave()) {
         if (button("CONTINUE", x, y, 200, 50, true) || IsKeyPressed(KEY_ENTER)) {
             if (!loadGame()) {

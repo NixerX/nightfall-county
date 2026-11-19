@@ -470,7 +470,8 @@ static void update(float dt) {
                                  }),
                   zombies.end());
     Vector2 ap = aimPoint();
-    Vector2 lead = Vector2Scale(V2(Clamp(ap.x - P.p.x, -12, 12), Clamp(ap.y - P.p.y, -9, 9)), .28f);
+    Vector2 la = camUnrot(Vector2Subtract(ap, P.p)); // lead toward the aim, clamped to the screen's shape
+    Vector2 lead = camRot(Vector2Scale(V2(Clamp(la.x, -12, 12), Clamp(la.y, -9, 9)), .28f));
     camPos =
         camLow > 0 ? P.p : Vector2Lerp(camPos, Vector2Add(P.p, lead), 1 - powf(.002f, dt)); // test scenes: locked on
     if (pendingLv > 0 && state == ST_PLAY)

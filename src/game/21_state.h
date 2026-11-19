@@ -48,7 +48,25 @@ struct Msg {
 static std::vector<Msg> msgs;
 static Vector2 camPos{MAP / 2, MAP / 2};
 static float camZoom = 1.f;
-static float camLow = 0; // test scenes only: 0 normal camera, 1 low side-on view
+static float camLow = 0;  // test scenes only: 0 normal camera, 1 low side-on view
+static float camYaw = 0;  // orbit around the player (radians, 0 = looking north like it always was)
+static float camTilt = 0; // player tilt: -.4 steeper/top-down .. .6 lower/side-on
+// screen-local <-> world (xz). Local +x = screen right, local -z (y here) = screen up.
+static Vector2 camRot(Vector2 v) {
+    float c = cosf(camYaw), s = sinf(camYaw);
+    return V2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+static Vector2 camUnrot(Vector2 v) {
+    float c = cosf(camYaw), s = sinf(camYaw);
+    return V2(v.x * c + v.y * s, -v.x * s + v.y * c);
+}
+// world-axis box that holds the (rotated) view rectangle: half-widths hx, hz around center ctr
+static void viewAABB(Vector2 c, float vr, float padX, float padZ, Vector2& ctr, float& hx, float& hz) {
+    float A = vr + padX, B = vr * .8f + padZ, cs = fabsf(cosf(camYaw)), sn = fabsf(sinf(camYaw));
+    ctr = Vector2Add(c, camRot(V2(0, -6)));
+    hx = cs * A + sn * B;
+    hz = sn * A + cs * B;
+}
 static bool muted = false;
 static int nearLoot = -1;
 static bool uiOpen = false;

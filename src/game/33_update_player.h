@@ -105,7 +105,7 @@ static void updatePlayer(float dt) {
                     (float)((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) - (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))));
     float il = Vector2Length(in);
     if (il > 0)
-        in = Vector2Scale(in, 1 / il);
+        in = camRot(Vector2Scale(in, 1 / il)); // W is always "up the screen", wherever the camera's turned
     Vector2 ap = aimPoint();
     P.a = atan2f(ap.y - P.p.y, ap.x - P.p.x);
     // click-to-move (Diablo): left-click the ground to walk, a zombie to go hit it, loot to go grab it. WASD still overrides

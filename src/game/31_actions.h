@@ -70,6 +70,8 @@ static void dodge() {
     Vector2 in = V2((float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)), (float)(IsKeyDown(KEY_S) - IsKeyDown(KEY_W)));
     if (Vector2Length(in) < .1f)
         in = polar(P.a, 1);
+    else
+        in = camRot(in);
     P.rv = Vector2Scale(Vector2Normalize(in), 10);
     P.roll = .28f;
     P.iframe = .32f;

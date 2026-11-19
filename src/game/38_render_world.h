@@ -82,9 +82,13 @@ static void drawTraders(); // 48_trade.h
 static void renderWorld3D() {
     float vr = 48 / camZoom;
     Vector2 c = state == ST_TITLE ? camPos : camPos;
-    auto vis = [&](float x, float z, float m) {
-        return fabsf(x - c.x) < vr + m && fabsf(z - c.y + 6) < vr * .8f + m;
+    auto vis = [&](float x, float z, float m) { // in camera space, so it turns with the camera
+        Vector2 l = camUnrot(V2(x - c.x, z - c.y));
+        return fabsf(l.x) < vr + m && fabsf(l.y + 6) < vr * .8f + m;
     };
+    Vector2 vc;
+    float vhx, vhz;
+    viewAABB(c, vr, 20, 20, vc, vhx, vhz);
     float dk = darkK();
     int uDet1 = 1, uDet0 = 0;
     BeginShaderMode(lit);
@@ -150,8 +154,8 @@ static void renderWorld3D() {
         }
     }
     // static chunks
-    for (int cx = gcl(c.x - vr - 20); cx <= gcl(c.x + vr + 20); cx++)
-        for (int cz = gcl(c.y - vr - 20); cz <= gcl(c.y + vr + 10); cz++)
+    for (int cx = gcl(vc.x - vhx); cx <= gcl(vc.x + vhx); cx++)
+        for (int cz = gcl(vc.y - vhz); cz <= gcl(vc.y + vhz); cz++)
             if (chunkHas[cx][cz]) {
                 litMat.maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
                 DrawMesh(chunkMesh[cx][cz], litMat, MatrixIdentity());
@@ -160,8 +164,8 @@ static void renderWorld3D() {
     std::vector<int> transp;
     static std::vector<int> loftT;
     loftT.clear();
-    for (int cx = gcl(c.x - vr - 20); cx <= gcl(c.x + vr + 20); cx++)
-        for (int cz = gcl(c.y - vr - 20); cz <= gcl(c.y + vr + 10); cz++)
+    for (int cx = gcl(vc.x - vhx); cx <= gcl(vc.x + vhx); cx++)
+        for (int cz = gcl(vc.y - vhz); cz <= gcl(vc.y + vhz); cz++)
             for (int pi : pgrid[cx][cz]) {
                 const Prop& p = props[pi];
                 if (p.layer == L_ALWAYS || !vis(p.p.x, p.p.z, 10))
@@ -230,8 +234,8 @@ static void renderWorld3D() {
     }
     // trees
     std::vector<int> tvis;
-    for (int cx = gcl(c.x - vr - 10); cx <= gcl(c.x + vr + 10); cx++)
-        for (int cz = gcl(c.y - vr - 10); cz <= gcl(c.y + vr + 10); cz++)
+    for (int cx = gcl(vc.x - vhx); cx <= gcl(vc.x + vhx); cx++)
+        for (int cz = gcl(vc.y - vhz); cz <= gcl(vc.y + vhz); cz++)
             for (int ti : tgrid[cx][cz]) {
                 const Tree& t = trees[ti];
                 if (!vis(t.p.x, t.p.y, 8))
@@ -798,8 +802,7 @@ player_done:;
         rlBegin(RL_LINES);
         int n = (int)(700 * rainLevel);
         for (int i = 0; i < n; i++) {
-            float rx = c.x + fmodf(i * 97.31f + gTime * 3, vr * 2) - vr,
-                  rz = c.y + fmodf(i * 53.7f, vr * 1.7f) - vr * .8f;
+            float rx = c.x + fmodf(i * 97.31f + gTime * 3, vr * 2) - vr, rz = c.y + fmodf(i * 53.7f, vr * 2) - vr;
             float ry = 14 - fmodf(gTime * (22 + (i % 5) * 2) + i * 3.17f, 14);
             rlColor4ub(170, 190, 220, (unsigned char)(70 * (1 - dk * .6f)));
             rlVertex3f(rx, ry, rz);

@@ -565,7 +565,7 @@ static void updateTraders(float dt) {
 // ---- drawing (3D, inside renderWorld3D)
 static void drawTraders() {
     for (auto& t : traders) {
-        if (fabsf(t.p.x - camPos.x) > 70 || fabsf(t.p.y - camPos.y) > 60)
+        if (Vector2Distance(t.p, camPos) > 80)
             continue;
         if (t.kind == 0) { // the stall: table, crates, a tarp on four posts
             float y = t.a;

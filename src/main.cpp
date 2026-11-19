@@ -176,7 +176,42 @@ int main() {
                 if (P.autorun)
                     P.crouch = false;
             }
-            if (IsKeyPressed(KEY_V) || IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE))
+            // camera: drag with the middle mouse button to orbit/tilt (a plain middle click still swings),
+            // hold , and . to rotate, PgUp/PgDn to tilt, End to reset
+            static bool mDown = false, mDragged = false;
+            static Vector2 mLast{};
+            bool midClick = false;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
+                mDown = true;
+                mDragged = false;
+                mLast = GetMousePosition();
+            }
+            if (mDown && IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+                Vector2 mp = GetMousePosition(), dm = Vector2Subtract(mp, mLast);
+                if (!mDragged && fabsf(dm.x) + fabsf(dm.y) > 6)
+                    mDragged = true;
+                if (mDragged) {
+                    camYaw += dm.x * .006f;
+                    camTilt = Clamp(camTilt + dm.y * .003f, -.4f, .6f);
+                    mLast = mp;
+                }
+            }
+            if (mDown && IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE)) {
+                midClick = !mDragged;
+                mDown = false;
+            }
+            if (IsKeyDown(KEY_COMMA))
+                camYaw -= 1.8f * dt;
+            if (IsKeyDown(KEY_PERIOD))
+                camYaw += 1.8f * dt;
+            if (IsKeyDown(KEY_PAGE_UP))
+                camTilt = Clamp(camTilt - .6f * dt, -.4f, .6f);
+            if (IsKeyDown(KEY_PAGE_DOWN))
+                camTilt = Clamp(camTilt + .6f * dt, -.4f, .6f);
+            if (IsKeyPressed(KEY_END))
+                camYaw = camTilt = 0;
+            camYaw = remainderf(camYaw, 2 * PI);
+            if (IsKeyPressed(KEY_V) || midClick)
                 melee();
             if (IsKeyPressed(KEY_F))
                 toggleLight();
@@ -291,7 +326,9 @@ int main() {
         Vector3 tgt = V3(camPos.x + shx, 0, camPos.y + shz);
         float dist = 27.f / camZoom;
         cam3.target = Vector3Add(tgt, V3(0, .8f, 0));
-        cam3.position = Vector3Add(tgt, V3(0, dist * (.86f - .6f * camLow), dist * (.52f + .42f * camLow)));
+        float low = Clamp(camLow + camTilt, -.4f, .6f);
+        Vector2 back = camRot(V2(0, dist * (.52f + .42f * low))); // camera sits "south" of you in screen space
+        cam3.position = Vector3Add(tgt, V3(back.x, dist * (.86f - .6f * low), back.y));
         cam3.up = V3(0, 1, 0);
         cam3.fovy = 42;
         cam3.projection = CAMERA_PERSPECTIVE;

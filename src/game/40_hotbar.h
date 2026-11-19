@@ -420,6 +420,15 @@ static void drawHUD() {
         }
     }
     drawTraderHUD();
+    if (fabsf(camYaw) > .03f && state == ST_PLAY) { // compass once the camera's turned: which way is north
+        Vector2 cc = V2(W - 46.f, 46), n = Vector2Normalize(camUnrot(V2(0, -1)));
+        DrawCircleV(cc, 20, rgba(10, 12, 16, 170));
+        DrawCircleLines((int)cc.x, (int)cc.y, 20, rgba(90, 96, 108));
+        DrawLineEx(Vector2Subtract(cc, Vector2Scale(n, 12)), Vector2Add(cc, Vector2Scale(n, 12)), 2, STEEL);
+        DrawCircleV(Vector2Add(cc, Vector2Scale(n, 12)), 3, rgba(224, 65, 62));
+        text("N", cc.x + n.x * 30, cc.y + n.y * 30 - 7, 13, BONE, 1, false);
+        text("End: reset", cc.x, cc.y + 26, 11, STEEL, 1, false);
+    }
     if ((nearLoot < 0 || nearAct.kind == A_TRADE) && nearAct.kind != A_NONE && state == ST_PLAY) {
         Vector2 s = GetWorldToScreen(xz3(P.p, 2.3f + charY + (P.loft >= 0 ? lofts[P.loft].y : 0)), cam3);
         text("[E] " + actLabel(nearAct), s.x, s.y, 14, SODIUM, 1);

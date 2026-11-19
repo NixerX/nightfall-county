@@ -239,7 +239,8 @@ static void computeFades(float dt) {
             t.fade = 1;
             continue;
         }
-        float dx = fabsf(t.p.x - P.p.x), dz = t.p.y - P.p.y;
+        Vector2 l = camUnrot(V2(t.p.x - P.p.x, t.p.y - P.p.y)); // camera space: +z is toward the camera
+        float dx = fabsf(l.x), dz = l.y;
         bool occ = dx < t.r + 1 && dz > -t.r && dz < t.h * .7f;
         t.fade += ((occ ? .25f : 1.f) - t.fade) * std::min(1.f, dt * 8);
     }
