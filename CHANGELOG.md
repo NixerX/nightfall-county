@@ -7,6 +7,7 @@
 - Raids: when you come within about 110 m of a town trader, there's a chance (15% on day 1, 30% after, once a day) that zombies are overrunning the stall. Hold them off: the trader shoots back but won't last alone. Save them and you get a gun, meds and ammo, XP, and they pay 15% more for your stuff from then on. Let them die and their stall's up for grabs. Walk off (140 m) and they hold out on their own, no reward.
 - Traders blast anything that wanders within 6 m of them, so their stalls are a bit of a safe spot.
 - Older saves load fine and just get fresh traders.
+- Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9
 - Characters move like people. Poses blend instead of snapping (swings, guards, aiming, crouching, walk to sprint). The walk is fixed: the swinging leg bends at the knee (it was the planted one) and feet no longer skate. Hips and shoulders move with the stride; standing characters breathe and shift their weight; guns bob as you walk; you lean into turns; hits shove the body the way they came.

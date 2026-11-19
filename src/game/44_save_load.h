@@ -71,7 +71,7 @@ static Weapon rGun(std::istream& in) {
 }
 static void saveTraders(std::ostream& o); // 48_trade.h
 static void loadTraders(std::istream& in);
-constexpr int SAVE_VER = 6; // bump when world generation changes (old saves would load onto a different map)
+constexpr int SAVE_VER = 7; // bump when world generation changes (old saves would load onto a different map)
 static void saveGame() {
     std::ofstream o(runSavePath());
     if (!o) {

@@ -2,7 +2,7 @@
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
 // ============================================================ world data
-constexpr float MAP = 3200.f, GCELL = 32.f, CELLX = MAP + 40.f, WORLDX = MAP + 330.f;
+constexpr float MAP = 1600.f, GCELL = 32.f, CELLX = MAP + 40.f, WORLDX = MAP + 330.f;
 constexpr int GN = (int)(WORLDX / GCELL) + 1; // interiors (basements, upstairs) live in a strip east of the map
 constexpr int PPM = 1;
 constexpr int GTEX = (int)MAP * PPM;

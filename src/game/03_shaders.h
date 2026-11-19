@@ -69,7 +69,7 @@ void main(){
   vec3 V = normalize(viewPos - fragPos);
   float rough = 0.85, ao = 1.0;
   if(texMode==5){ // terrain: 12 photo layers from an atlas, weighted by 3 splat maps + baked AO
-    vec2 suv = fragPos.xz/3200.0; vec4 s0 = texture(texture4, suv), s1 = texture(texture5, suv), s2 = texture(texture6, suv);
+    vec2 suv = fragPos.xz/1600.0; vec4 s0 = texture(texture4, suv), s1 = texture(texture5, suv), s2 = texture(texture6, suv);
     float w[12]; w[1]=s0.r; w[2]=s0.g; w[3]=s0.b; w[4]=s0.a; w[5]=s1.r; w[6]=s1.g; w[7]=s1.b; w[8]=s1.a; w[9]=s2.r; w[10]=s2.g; w[11]=s2.b;
     float sum = 0.0; for(int i=1;i<12;i++) sum += w[i]; w[0] = max(0.0, 1.0 - sum);
     vec2 tuv = fragPos.xz*texScale; vec2 gx = dFdx(tuv)*vec2(512.0/2176.0, 512.0/1632.0), gy = dFdy(tuv)*vec2(512.0/2176.0, 512.0/1632.0);
