@@ -403,6 +403,8 @@ static void buildLooks() {
     for (int r = 0; r < 3; r++)
         for (int ai : sold)
             add(5 /*soldier*/, ai, 1);
+    for (int ai : civ)
+        add(6 /*living survivors: traders*/, ai, 0);
     int pm = AS("chars/M_Adventurer"), pf = AS("chars/F_Adventurer");
     if (pm >= 0) {
         looks.push_back(makeLook(pm, 0));

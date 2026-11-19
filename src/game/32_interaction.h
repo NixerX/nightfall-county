@@ -8,8 +8,12 @@ enum ActKind {
     A_LADDER,
     A_FIRE,
     A_CAR,
-    A_STAIRS
+    A_STAIRS,
+    A_TRADE
 };
+static int nearTraderIdx(); // 48_trade.h
+static std::string traderLabel(int i);
+static void openTrade(int i);
 struct Act {
     int kind = A_NONE, idx = -1;
 };
@@ -56,6 +60,11 @@ static Act findAct() {
                 a = {A_FIRE, i};
             }
         }
+    {
+        int ti = nearTraderIdx();
+        if (ti >= 0)
+            a = {A_TRADE, ti}; // a trader standing right there wins over doors and ladders
+    }
     if (a.kind == A_NONE)
         for (int i = 0; i < (int)carObjs.size(); i++) {
             const CarObj& c = carObjs[i];
@@ -79,6 +88,8 @@ static std::string actLabel(const Act& a) {
         return invCount(IT_LOG) ? "Throw a log on the fire" : "Feed the fire kindling";
     case A_CAR:
         return carObjs[a.idx].burned ? "Pick through the wreck" : "Search car";
+    case A_TRADE:
+        return traderLabel(a.idx);
     case A_STAIRS: {
         const Stair& st = stairs[a.idx];
         bool atA = Vector2Distance(st.a, P.p) < Vector2Distance(st.b, P.p);
@@ -185,6 +196,9 @@ static void startCarAlarm(Vector2 cp) { // the search set off the alarm: a crowd
 }
 static void doAct(const Act& a) {
     switch (a.kind) {
+    case A_TRADE:
+        openTrade(a.idx);
+        return;
     case A_STAIRS:
         takeStairs(a.idx);
         return;
@@ -252,6 +266,10 @@ static void doAct(const Act& a) {
     }
 }
 static void interact() {
+    if (nearAct.kind == A_TRADE) {
+        doAct(nearAct);
+        return;
+    }
     if (nearLoot >= 0 && !(nearAct.kind == A_DOOR && Vector2Distance(doorObjs[nearAct.idx].c, P.p) <
                                                          Vector2Distance(V2(loot[nearLoot].p.x, loot[nearLoot].p.z),
                                                                          P.p))) { // a closer door wins

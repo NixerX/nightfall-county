@@ -78,6 +78,7 @@ static void drawStumps(const CharOut& co, const signed char* cut, bool armL, boo
             drawMeshM(M_SPHERE, TRS(cut[2 + sd] == 2 ? co.hip[sd] : co.knee[sd], V3(.11f, .11f, .11f), 0), sc);
     }
 }
+static void drawTraders(); // 48_trade.h
 static void renderWorld3D() {
     float vr = 48 / camZoom;
     Vector2 c = state == ST_TITLE ? camPos : camPos;
@@ -392,6 +393,7 @@ static void renderWorld3D() {
             else
                 drawGibM(g);
         }
+    drawTraders();
     // zombies
     for (auto& z : zombies) {
         if (!vis(z.p.x, z.p.y, 3))

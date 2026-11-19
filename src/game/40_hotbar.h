@@ -99,6 +99,7 @@ static void drawHotbar(bool inv) {
         text("Drag items onto the bar. Right-click a slot to clear it.", W / 2.f, H - 126.f, 11, rgba(120, 126, 136),
              1);
 }
+static void drawTraderHUD(); // 48_trade.h
 static void drawHUD() {
     float m = 22;
     for (auto& d : sdrops) {
@@ -418,7 +419,8 @@ static void drawHUD() {
             y += 18;
         }
     }
-    if (nearLoot < 0 && nearAct.kind != A_NONE && state == ST_PLAY) {
+    drawTraderHUD();
+    if ((nearLoot < 0 || nearAct.kind == A_TRADE) && nearAct.kind != A_NONE && state == ST_PLAY) {
         Vector2 s = GetWorldToScreen(xz3(P.p, 2.3f + charY + (P.loft >= 0 ? lofts[P.loft].y : 0)), cam3);
         text("[E] " + actLabel(nearAct), s.x, s.y, 14, SODIUM, 1);
     }

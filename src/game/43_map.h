@@ -1,6 +1,7 @@
 // Nightfall County: map.
 // Not a standalone header: included once, in order, from src/main.cpp. Everything above it in that list is visible here.
 #pragma once
+static void drawTradersMap(float mx, float my, float sc, Vector2 me); // 48_trade.h
 static void drawMap() {
     static float zoom = 1;
     static Vector2 vc{MAP / 2, MAP / 2};
@@ -104,6 +105,7 @@ static void drawMap() {
             text(off ? "HORDE (edge)" : "HORDE", hp.x, hp.y + 12, 13, rgba(255, 130, 110), 1, true);
         }
     }
+    drawTradersMap(mx, my, sc, me);
     for (int i = 0; i < 6; i++) {
         const Town& T = TOWNS[i];
         text(T.name, mx + T.c.x * sc, my + T.c.y * sc - T.r * sc - 18, 16,

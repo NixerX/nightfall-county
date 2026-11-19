@@ -10,7 +10,8 @@ enum State {
     ST_DEAD,
     ST_INV,
     ST_MAP,
-    ST_SETTINGS
+    ST_SETTINGS,
+    ST_TRADE
 };
 static State state = ST_TITLE;
 static float gTime = 0, shake = 0, spawnT = 0, groanCd = 0, deadT = 0, rainLevel = 0, rainTarget = 0, rainT = 0;

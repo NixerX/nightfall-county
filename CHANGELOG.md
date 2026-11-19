@@ -1,5 +1,13 @@
 # Nightfall County changelog
 
+## v0.9.0
+- Traders. Most towns (not Fort Calloway) have a trader at a stall in town, marked $ on the map. Walk up and press E to barter: no money, just stuff. Their goods count at full value; yours count at what they'll pay (65% at a town stall). Click to add, Shift +10, Ctrl all, right click to take back. TRADE lights up once your side covers theirs. Anything that doesn't fit in your pockets lands at your feet.
+- They sell food, water, meds, ammo, tools, a melee weapon or two and sometimes a gun, and restock every morning. Cities carry more. You can sell them guns and your melee weapon too.
+- A wandering trader walks town to town, resting a few hours at each. Smaller stock but better stuff (magic-or-better guns, morphine, antibiotics, pipe bombs, rifle ammo), and pays 75%. Shows on the map within 250 m.
+- Raids: when you come within about 110 m of a town trader, there's a chance (15% on day 1, 30% after, once a day) that zombies are overrunning the stall. Hold them off: the trader shoots back but won't last alone. Save them and you get a gun, meds and ammo, XP, and they pay 15% more for your stuff from then on. Let them die and their stall's up for grabs. Walk off (140 m) and they hold out on their own, no reward.
+- Traders blast anything that wanders within 6 m of them, so their stalls are a bit of a safe spot.
+- Older saves load fine and just get fresh traders.
+
 ## v0.8.9
 - Characters move like people. Poses blend instead of snapping (swings, guards, aiming, crouching, walk to sprint). The walk is fixed: the swinging leg bends at the knee (it was the planted one) and feet no longer skate. Hips and shoulders move with the stride; standing characters breathe and shift their weight; guns bob as you walk; you lean into turns; hits shove the body the way they came.
 - Zombies shamble and lurch, some drag a foot, runners flail and trip, and you can feel a brute's footsteps. Their arms hang while they wander and come up when they spot you. Badly hurt ones reel.

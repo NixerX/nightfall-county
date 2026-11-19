@@ -34,6 +34,7 @@ static void dressHotZones() { // bodies and blood (decals/corpses are wiped afte
     }
 }
 static void resetHotbar();
+static void genTraders(); // 48_trade.h
 static unsigned worldSeed = 0;
 static void newGame(unsigned seed = 0) {
     worldSeed = seed ? seed : ((unsigned)time(nullptr) ^ (unsigned)(GetTime() * 1000));
@@ -96,10 +97,12 @@ static void newGame(unsigned seed = 0) {
     for (int i = 0; i < 6; i++)
         spawnAround(Z_WALKER, 30, 70);
     dressHotZones();
+    genTraders();
     showBanner(std::string("YOU ARE ") + (strchr("AEIOUaeiou", CL().n[0]) ? "AN " : "A ") + CL().n, s1 + "   /   " + s2,
                CL().c);
     msg("Class: " + std::string(CL().n) + ". [Z] " + CL().act + ", [K] skills.", CL().c);
     msg("Fists, rags and whatever's in your pockets. [Tab] inventory. Clothes are your storage.", BONE);
     msg("The county's been redrawn. Same towns, new places. Check the map.", BONE);
+    msg("Traders ($ on the map) barter for what you carry.", BONE);
     state = ST_PLAY;
 }

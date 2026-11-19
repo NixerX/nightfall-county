@@ -87,6 +87,7 @@ Code style is set by `.clang-format` in the repo root (one statement per line). 
 | `45_menus.h` | Menus | Title, skills, pause, Settings (`drawSettings`), death screen, display mode |
 | `46_autotest.h` | Testing | Scripted autotest run, only built with `-DNF_AUTOTEST` |
 | `47_ambience.h` | Audio | Looping ambience beds and adaptive music volumes |
+| `48_trade.h` | Traders | Town and wandering traders, item values (`IVAL`, `GVAL`, `MVAL`), the barter screen (`drawTrade`), trader raids, their save block. Lower files call in through forward declarations |
 
 `main()` (window setup, the main loop, state switching) stays in `src/main.cpp`.
 
@@ -104,4 +105,5 @@ Test scenes (autotest build, `-DNF_AUTOTEST`): `NF_SCENE=anim` and `NF_SCENE=gor
 - Controls and moves: `33_update_player.h`, `31_actions.h`
 - Inventory screen: `41_inventory_ui.h`, `42_inventory_draw.h`
 - HUD: `40_hotbar.h`
+- Trading, prices, trader raids: `48_trade.h`
 - Save format: `44_save_load.h` (changing it breaks old saves unless you handle both)

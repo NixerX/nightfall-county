@@ -354,6 +354,7 @@ static void updateWorld(float dt) {
                                  3, 3, frand(.6f, 1.2f), rgba(40, 40, 44, 150), P_SMOKE});
         }
 }
+static void updateTraders(float dt); // 48_trade.h
 static void update(float dt) {
     gTime += dt;
     P.alive += 0;
@@ -462,6 +463,7 @@ static void update(float dt) {
     separateFromPlayer();
     updateBullets(dt);
     updateWorld(dt);
+    updateTraders(dt);
     zombies.erase(std::remove_if(zombies.begin(), zombies.end(),
                                  [](const Zombie& z) {
                                      return z.dead || z.gone;

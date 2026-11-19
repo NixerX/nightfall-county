@@ -69,6 +69,8 @@ static Weapon rGun(std::istream& in) {
     in >> std::quoted(w.name);
     return w;
 }
+static void saveTraders(std::ostream& o); // 48_trade.h
+static void loadTraders(std::istream& in);
 constexpr int SAVE_VER = 6; // bump when world generation changes (old saves would load onto a different map)
 static void saveGame() {
     std::ofstream o(runSavePath());
@@ -126,6 +128,7 @@ static void saveGame() {
     o << "G3 " << P.hasGun[3] << '\n'; // long gun 2 (added later: optional, so older saves still load)
     if (P.hasGun[3])
         wGun(o, P.gun[3]);
+    saveTraders(o); // optional block: older saves load without it
     o << "END\n";
 }
 static bool loadGame() {
@@ -214,6 +217,10 @@ static bool loadGame() {
         in >> P.hasGun[3];
         if (P.hasGun[3])
             P.gun[3] = rGun(in);
+        in >> tag;
+    }
+    if (tag == "TR") {
+        loadTraders(in);
         in >> tag;
     }
     { // older saves: give long gun 2 a hotbar key (first empty one)

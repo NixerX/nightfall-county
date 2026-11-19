@@ -68,6 +68,7 @@
 #include "game/45_menus.h"
 #include "game/46_autotest.h"
 #include "game/47_ambience.h"
+#include "game/48_trade.h"
 
 // ============================================================ main
 int main() {
@@ -218,14 +219,17 @@ int main() {
                 state = ST_PAUSE;
             else
                 update(dt);
-        } else if (state == ST_INV || state == ST_MAP || state == ST_SKILLS) { // world keeps running, like DayZ
+        } else if (state == ST_INV || state == ST_MAP || state == ST_SKILLS ||
+                   state == ST_TRADE) { // world keeps running, like DayZ
+            if (state == ST_TRADE && (IsKeyPressed(KEY_E) || IsKeyPressed(KEY_TAB) || IsKeyPressed(KEY_ESCAPE)))
+                closeTrade();
             if (state == ST_INV && (IsKeyPressed(KEY_TAB) || IsKeyPressed(KEY_ESCAPE))) {
                 cancelDrag();
                 ctxMenu.on = false;
             }
             if ((state == ST_INV && (IsKeyPressed(KEY_TAB) || IsKeyPressed(KEY_ESCAPE))) ||
                 (state == ST_MAP && (IsKeyPressed(KEY_M) || IsKeyPressed(KEY_ESCAPE))) ||
-                (state == ST_SKILLS && (IsKeyPressed(KEY_K) || IsKeyPressed(KEY_ESCAPE))))
+                (state == ST_SKILLS && (IsKeyPressed(KEY_K) || IsKeyPressed(KEY_ESCAPE))) || state == ST_PLAY)
                 state = ST_PLAY;
             else {
                 State s = state;
@@ -235,6 +239,8 @@ int main() {
                 uiOpen = false;
                 if (state == ST_PLAY)
                     state = s;
+                if (state == ST_TRADE && tradeWith < 0)
+                    state = ST_PLAY; // the trade got cut short during the update
             }
         } else if (state == ST_PAUSE) {
             if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_ESCAPE))
@@ -329,7 +335,7 @@ int main() {
                            {(float)GetRandomValue(0, 255), (float)GetRandomValue(0, 255), (float)W / 2, (float)H / 2},
                            {0, 0, (float)W, (float)H}, V2(0, 0), 0, rgba(255, 255, 255, 9));
         if (state == ST_PLAY || state == ST_PAUSE || state == ST_SKILLS || state == ST_INV || state == ST_MAP ||
-            (state == ST_DEAD && deadT < 1.2f))
+            state == ST_TRADE || (state == ST_DEAD && deadT < 1.2f))
             drawHUD();
         if (state == ST_SETTINGS)
             drawSettings();
@@ -345,6 +351,8 @@ int main() {
             drawInventory();
         else if (state == ST_MAP)
             drawMap();
+        else if (state == ST_TRADE)
+            drawTrade();
         EndDrawing();
     }
     if (audioOk)
