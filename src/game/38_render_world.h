@@ -82,9 +82,10 @@ static void drawTraders(); // 48_trade.h
 static void renderWorld3D() {
     float vr = 48 / camZoom;
     Vector2 c = state == ST_TITLE ? camPos : camPos;
+    const float vcs = cosf(camYaw), vsn = sinf(camYaw);
     auto vis = [&](float x, float z, float m) { // in camera space, so it turns with the camera
-        Vector2 l = camUnrot(V2(x - c.x, z - c.y));
-        return fabsf(l.x) < vr + m && fabsf(l.y + 6) < vr * .8f + m;
+        float dx = x - c.x, dz = z - c.y, lx = dx * vcs + dz * vsn, lz = -dx * vsn + dz * vcs;
+        return fabsf(lx) < vr + m && fabsf(lz + 6) < vr * .8f + m;
     };
     Vector2 vc;
     float vhx, vhz;

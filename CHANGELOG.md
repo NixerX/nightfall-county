@@ -8,6 +8,7 @@
 - Traders blast anything that wanders within 6 m of them, so their stalls are a bit of a safe spot.
 - Older saves load fine and just get fresh traders.
 - Camera turns (turn it on in Settings > Camera rotation; off by default). Drag with the middle mouse button to orbit around yourself (sideways) and tilt (up/down); a plain middle click still swings. Or hold , and . to rotate, PgUp/PgDn to tilt, End to reset. WASD always moves relative to the screen. A compass (top right) shows north once you've turned; the map stays north-up.
+- F3 shows a performance overlay: milliseconds per part of the frame and how many zombies, corpses, decals, lights and so on are alive.
 - Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9

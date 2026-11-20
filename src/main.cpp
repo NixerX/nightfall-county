@@ -129,6 +129,18 @@ int main() {
         W = GetScreenWidth();
         H = GetScreenHeight();
         float dt = std::min(.033f, GetFrameTime());
+        // F3: where the frame goes (ms, smoothed) and how much stuff is alive
+        static bool perfOn = false;
+        static float pUpd = 0, pFade = 0, pShad = 0, pWorld = 0, pUi = 0, pSwap = 0;
+        static double tMark = 0;
+        auto pm = [](float& acc) {
+            double n = GetTime();
+            acc += ((float)((n - tMark) * 1000) - acc) * .1f;
+            tMark = n;
+        };
+        if (IsKeyPressed(KEY_F3))
+            perfOn = !perfOn;
+        tMark = GetTime();
         if (slowMo > 0 && state == ST_PLAY) { // the odd spectacular kill gets a beat of slow motion
             slowMo -= dt;
             dt *= .3f;
@@ -341,12 +353,15 @@ int main() {
         camRight = V3(view.m0, view.m4, view.m8);
         camUp = V3(view.m1, view.m5, view.m9);
         camFwd = Vector3Normalize(Vector3Subtract(cam3.target, cam3.position));
+        pm(pUpd); // input + simulation (everything above)
         computeFades(dt);
+        pm(pFade);
         BeginDrawing();
         setupLighting(cam3.position);
         poseFrame++;
         renderShadows();
         renderFlashShadow();
+        pm(pShad);
         Vector3 fogC = Vector3Lerp(V3(.55f, .58f, .6f), V3(.006f, .008f, .014f), darkK());
         if (inCell(P.p) && state != ST_TITLE)
             fogC = V3(0, 0, 0);
@@ -354,6 +369,7 @@ int main() {
         BeginMode3D(cam3);
         renderWorld3D();
         EndMode3D();
+        pm(pWorld);
         static const bool glDebug = getenv("NF_GLDEBUG") != nullptr; // run with NF_GLDEBUG=1 to log this once a second
         static int dbgFrame = 0;
         if (glDebug && dbgFrame++ % 60 == 0) {
@@ -395,7 +411,28 @@ int main() {
             drawMap();
         else if (state == ST_TRADE)
             drawTrade();
+        if (perfOn) {
+            int nz = 0;
+            for (auto& z : zombies)
+                nz += !z.dead;
+            DrawRectangle(8, 8, 330, 196, rgba(0, 0, 0, 190));
+            const char* lines[] = {
+                TextFormat("FPS %d   frame %.1f ms", GetFPS(), GetFrameTime() * 1000),
+                TextFormat("update  %5.2f   fades %5.2f", pUpd, pFade),
+                TextFormat("shadows %5.2f   world %5.2f", pShad, pWorld),
+                TextFormat("hud/ui  %5.2f   swap  %5.2f", pUi, pSwap),
+                TextFormat("zombies %d  corpses %d  gibs %d", nz, (int)corpses.size(), (int)gibs.size()),
+                TextFormat("decals %d  parts %d  lights %d", (int)decals.size(), (int)parts.size(), (int)lights.size()),
+                TextFormat("loot %d  traders %d  props %d", (int)loot.size(), (int)traders.size(), (int)props.size()),
+                TextFormat("shadows %d  foliage %d  %dx%d", cfg.shadows, cfg.foliage, GetRenderWidth(),
+                           GetRenderHeight()),
+                "swap high = GPU-bound; update/world high = CPU"};
+            for (int i = 0; i < 9; i++)
+                DrawText(lines[i], 16, 14 + i * 20, 16, i == 8 ? GRAY : RAYWHITE);
+        }
+        pm(pUi);
         EndDrawing();
+        pm(pSwap); // waiting on the GPU / vsync
     }
     if (audioOk)
         CloseAudioDevice();
