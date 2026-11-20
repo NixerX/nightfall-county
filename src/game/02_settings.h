@@ -15,6 +15,7 @@ struct Settings {
     int autoEquip = 0;
     int gore = 1;       // 0 low (blood, no flying parts), 1 normal, 2 extreme
     int permadeath = 1; // 1: death deletes the save and quitting always saves
+    int camRotate = 0;  // 1: middle-drag / , . turn the camera
 } cfg;
 static const int RES[6][2] = {{1280, 720},  {1600, 900},  {1920, 1080},
                               {2560, 1440}, {3840, 2160}, {0, 0}}; // last = native monitor
@@ -36,6 +37,9 @@ static void loadCfg() {
         cfg.gore = 1;
     if (!(f >> cfg.permadeath))
         cfg.permadeath = 1;
+    if (!(f >> cfg.camRotate))
+        cfg.camRotate = 0;
+    cfg.camRotate = cfg.camRotate ? 1 : 0;
     cfg.gore = std::max(0, std::min(2, cfg.gore));
     cfg.diff = std::max(0, std::min(3, cfg.diff));
     cfg.res = std::max(0, std::min(5, cfg.res));
@@ -48,5 +52,5 @@ static void saveCfg() {
     std::ofstream f(cfgPath());
     f << cfg.fps << " " << cfg.shadows << " " << cfg.foliage << " " << cfg.master << " " << cfg.sfx << " " << cfg.music
       << " " << cfg.controls << " " << cfg.diff << " " << cfg.fullscreen << " " << cfg.res << " " << cfg.grain << " "
-      << cfg.autoEquip << " " << cfg.gore << " " << cfg.permadeath;
+      << cfg.autoEquip << " " << cfg.gore << " " << cfg.permadeath << " " << cfg.camRotate;
 }

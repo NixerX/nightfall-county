@@ -180,8 +180,13 @@ int main() {
             // hold , and . to rotate, PgUp/PgDn to tilt, End to reset
             static bool mDown = false, mDragged = false;
             static Vector2 mLast{};
-            bool midClick = false;
-            if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
+            bool midClick = false, rot = cfg.camRotate;
+            if (!rot) {
+                camYaw = camTilt = 0; // off: fixed camera, and middle click swings straight away
+                mDown = false;
+                midClick = IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE);
+            }
+            if (rot && IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
                 mDown = true;
                 mDragged = false;
                 mLast = GetMousePosition();
@@ -200,15 +205,15 @@ int main() {
                 midClick = !mDragged;
                 mDown = false;
             }
-            if (IsKeyDown(KEY_COMMA))
+            if (rot && IsKeyDown(KEY_COMMA))
                 camYaw -= 1.8f * dt;
-            if (IsKeyDown(KEY_PERIOD))
+            if (rot && IsKeyDown(KEY_PERIOD))
                 camYaw += 1.8f * dt;
-            if (IsKeyDown(KEY_PAGE_UP))
+            if (rot && IsKeyDown(KEY_PAGE_UP))
                 camTilt = Clamp(camTilt - .6f * dt, -.4f, .6f);
-            if (IsKeyDown(KEY_PAGE_DOWN))
+            if (rot && IsKeyDown(KEY_PAGE_DOWN))
                 camTilt = Clamp(camTilt + .6f * dt, -.4f, .6f);
-            if (IsKeyPressed(KEY_END))
+            if (rot && IsKeyPressed(KEY_END))
                 camYaw = camTilt = 0;
             camYaw = remainderf(camYaw, 2 * PI);
             if (IsKeyPressed(KEY_V) || midClick)

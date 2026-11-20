@@ -34,7 +34,7 @@ static void drawTitle() {
                              {"B / N", "Bandage / best meds"},
                              {"X", "Autorun"},
                              {"P / Esc", "Pause"},
-                             {"MMB drag / , .", "Turn camera (PgUp/Dn tilt, End reset)"}};
+                             {"MMB drag / , .", "Turn camera (turn on in Settings)"}};
     const int nk = sizeof keys / sizeof *keys;
     for (int i = 0; i < nk; i++) {
         float cx = x + (i % 2) * 380, cy = y + (i / 2) * 26;
@@ -196,8 +196,8 @@ static void drawSettings() {
     for (int i = 0; i < 5; i++)
         if (fpsOpt[i] == cfg.fps)
             fi = i;
-    // rows shrink to fit the screen (14 rows + the BACK button); hints are dropped when there's no room for them
-    const float rowH = Clamp((H - y - 100) / 15.f, 36, 58);
+    // rows shrink to fit the screen (15 rows + the BACK button); hints are dropped when there's no room for them
+    const float rowH = Clamp((H - y - 100) / 16.f, 36, 58);
     auto row = [&](const char* label, const std::string& val, const char* hint) -> int {
         text(label, x, y + 8, 18, BONE);
         text(val, x + 420, y + 8, 18, SODIUM, 1);
@@ -269,6 +269,10 @@ static void drawSettings() {
                  cfg.permadeath ? "Death deletes your save. Quitting always saves."
                                 : "Death sends you back to your last save. Save often from the pause menu.")))
         cfg.permadeath = !cfg.permadeath;
+    if ((d = row("Camera rotation", cfg.camRotate ? "On" : "Off",
+                 cfg.camRotate ? "Middle-drag or , . to turn, PgUp/PgDn tilt, End resets."
+                               : "Fixed camera, like it always was. Middle click swings.")))
+        cfg.camRotate ^= 1;
     if ((d = row("Auto-equip guns", cfg.autoEquip ? "On" : "Off",
                  "Switch to a gun as soon as you pick it up. Off keeps what you're holding.")))
         cfg.autoEquip ^= 1;

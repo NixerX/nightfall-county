@@ -7,7 +7,7 @@
 - Raids: when you come within about 110 m of a town trader, there's a chance (15% on day 1, 30% after, once a day) that zombies are overrunning the stall. Hold them off: the trader shoots back but won't last alone. Save them and you get a gun, meds and ammo, XP, and they pay 15% more for your stuff from then on. Let them die and their stall's up for grabs. Walk off (140 m) and they hold out on their own, no reward.
 - Traders blast anything that wanders within 6 m of them, so their stalls are a bit of a safe spot.
 - Older saves load fine and just get fresh traders.
-- Camera turns. Drag with the middle mouse button to orbit around yourself (sideways) and tilt (up/down); a plain middle click still swings. Or hold , and . to rotate, PgUp/PgDn to tilt, End to reset. WASD always moves relative to the screen. A compass (top right) shows north once you've turned; the map stays north-up.
+- Camera turns (turn it on in Settings > Camera rotation; off by default). Drag with the middle mouse button to orbit around yourself (sideways) and tilt (up/down); a plain middle click still swings. Or hold , and . to rotate, PgUp/PgDn to tilt, End to reset. WASD always moves relative to the screen. A compass (top right) shows north once you've turned; the map stays north-up.
 - Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9
