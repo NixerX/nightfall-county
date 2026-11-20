@@ -178,9 +178,10 @@ static void applyDisplay() {
     if (IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE))
         ToggleBorderlessWindowed();
     if (cfg.fullscreen) {
-        // borderless at the monitor's own resolution: switching screen modes on Linux left old frames (menus,
-        // inventory) stuck around the edges. For speed, lower Render scale instead of the resolution.
-        ToggleBorderlessWindowed();
+        // real fullscreen, but always at the monitor's own resolution: a lower screen mode (and borderless, which
+        // KDE shrinks around its panel) left old frames stuck around the edges. For speed, lower Render scale.
+        SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
+        ToggleFullscreen();
     } else {
         w = std::min(w, GetMonitorWidth(mon));
         h = std::min(h, GetMonitorHeight(mon) - 60);

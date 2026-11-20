@@ -262,7 +262,7 @@ static void drawHUD() {
     } else
         text(MB[P.melee].n, rx, by + 40, 26, BONE, 2);
     if (P.tool != MK_FISTS)
-        text(std::string("Belt: ") + MB[P.tool].n + "  [T]", rx, by + 98, 12, STEEL, 2);
+        text(std::string("Belt: ") + MB[P.tool].n + "  [T]", rx, by + (g ? 92 : 74), 12, STEEL, 2);
     static const int ROWS[4] = {2, 1, 0, 3}; // melee, sidearm, long gun, long gun 2
     for (int k = 0; k < 4; k++) {
         int i = ROWS[k];

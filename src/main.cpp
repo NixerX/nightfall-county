@@ -442,7 +442,8 @@ int main() {
             int nz = 0;
             for (auto& z : zombies)
                 nz += !z.dead;
-            DrawRectangle(8, 8, 360, 216, rgba(0, 0, 0, 190));
+            const int ox = W - 372, oy = 80; // top right, under the compass, clear of the day/clock
+            DrawRectangle(ox - 8, oy - 6, 364, 216, rgba(0, 0, 0, 190));
             char ln[10][96]; // own buffers: raylib's TextFormat only keeps 4 strings alive
             snprintf(ln[0], 96, "FPS %d   frame %.1f ms", GetFPS(), GetFrameTime() * 1000);
             snprintf(ln[1], 96, "update  %5.2f   fades %5.2f", pUpd, pFade);
@@ -458,7 +459,7 @@ int main() {
                      GetRenderHeight());
             snprintf(ln[9], 96, "swap high = GPU-bound; update/world high = CPU");
             for (int i = 0; i < 10; i++)
-                DrawText(ln[i], 16, 14 + i * 20, 16, i == 9 ? GRAY : RAYWHITE);
+                DrawText(ln[i], ox, oy + i * 20, 16, i == 9 ? GRAY : RAYWHITE);
         }
         dbgCharDraws = 0;
         pm(pUi);
