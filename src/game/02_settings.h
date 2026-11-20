@@ -16,9 +16,11 @@ struct Settings {
     int gore = 1;       // 0 low (blood, no flying parts), 1 normal, 2 extreme
     int permadeath = 1; // 1: death deletes the save and quitting always saves
     int camRotate = 0;  // 1: middle-drag / , . turn the camera
+    int rscale = 0;     // 3D render scale: 0 100%, 1 85%, 2 70%, 3 55% (HUD and menus stay sharp)
 } cfg;
 static const int RES[6][2] = {{1280, 720},  {1600, 900},  {1920, 1080},
                               {2560, 1440}, {3840, 2160}, {0, 0}}; // last = native monitor
+static const float RSCALE[4] = {1, .85f, .7f, .55f};
 static const char* DIFFN[4] = {"Easy", "Normal", "Hard", "Nightmare"};
 static std::string cfgPath() {
     const char* h = getenv("HOME");
@@ -40,6 +42,9 @@ static void loadCfg() {
     if (!(f >> cfg.camRotate))
         cfg.camRotate = 0;
     cfg.camRotate = cfg.camRotate ? 1 : 0;
+    if (!(f >> cfg.rscale))
+        cfg.rscale = 0;
+    cfg.rscale = std::max(0, std::min(3, cfg.rscale));
     cfg.gore = std::max(0, std::min(2, cfg.gore));
     cfg.diff = std::max(0, std::min(3, cfg.diff));
     cfg.res = std::max(0, std::min(5, cfg.res));
@@ -52,5 +57,5 @@ static void saveCfg() {
     std::ofstream f(cfgPath());
     f << cfg.fps << " " << cfg.shadows << " " << cfg.foliage << " " << cfg.master << " " << cfg.sfx << " " << cfg.music
       << " " << cfg.controls << " " << cfg.diff << " " << cfg.fullscreen << " " << cfg.res << " " << cfg.grain << " "
-      << cfg.autoEquip << " " << cfg.gore << " " << cfg.permadeath << " " << cfg.camRotate;
+      << cfg.autoEquip << " " << cfg.gore << " " << cfg.permadeath << " " << cfg.camRotate << " " << cfg.rscale;
 }

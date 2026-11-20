@@ -175,9 +175,12 @@ static void applyDisplay() {
         h = cfg.res == 5 ? GetMonitorHeight(mon) : RES[cfg.res][1];
     if (IsWindowFullscreen())
         ToggleFullscreen();
+    if (IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE))
+        ToggleBorderlessWindowed();
     if (cfg.fullscreen) {
-        SetWindowSize(w, h);
-        ToggleFullscreen();
+        // borderless at the monitor's own resolution: switching screen modes on Linux left old frames (menus,
+        // inventory) stuck around the edges. For speed, lower Render scale instead of the resolution.
+        ToggleBorderlessWindowed();
     } else {
         w = std::min(w, GetMonitorWidth(mon));
         h = std::min(h, GetMonitorHeight(mon) - 60);
@@ -197,8 +200,8 @@ static void drawSettings() {
     for (int i = 0; i < 5; i++)
         if (fpsOpt[i] == cfg.fps)
             fi = i;
-    // rows shrink to fit the screen (15 rows + the BACK button); hints are dropped when there's no room for them
-    const float rowH = Clamp((H - y - 100) / 16.f, 36, 58);
+    // rows shrink to fit the screen (16 rows + the BACK button); hints are dropped when there's no room for them
+    const float rowH = Clamp((H - y - 100) / 17.f, 34, 58);
     auto row = [&](const char* label, const std::string& val, const char* hint) -> int {
         text(label, x, y + 8, 18, BONE);
         text(val, x + 420, y + 8, 18, SODIUM, 1);
@@ -224,10 +227,17 @@ static void drawSettings() {
         std::string rn = cfg.res == 5 ? std::string("Native ") + std::to_string(GetMonitorWidth(GetCurrentMonitor())) +
                                             "x" + std::to_string(GetMonitorHeight(GetCurrentMonitor()))
                                       : std::to_string(RES[cfg.res][0]) + "x" + std::to_string(RES[cfg.res][1]);
-        if ((d = row("Resolution", rn, "Window size, or the screen mode in fullscreen."))) {
+        if ((d = row("Window size", cfg.fullscreen ? std::string("(fullscreen: native)") : rn,
+                     "Windowed only. Fullscreen always uses your screen's own resolution."))) {
             cfg.res = (cfg.res + d + 6) % 6;
             applyDisplay();
         }
+    }
+    {
+        static const char* RSN[4] = {"100%", "85%", "70%", "55%"};
+        if ((d = row("Render scale", RSN[cfg.rscale],
+                     "Draws the world at fewer pixels, menus stay sharp. The big one for laptops.")))
+            cfg.rscale = (cfg.rscale + d + 4) % 4;
     }
     static const char* q3[3] = {"Low", "Medium", "High"};
     static const char* sh3[3] = {"Off", "Low (1024)", "High (2048)"};

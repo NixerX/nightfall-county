@@ -373,9 +373,29 @@ int main() {
         if (inCell(P.p) && state != ST_TITLE)
             fogC = V3(0, 0, 0);
         ClearBackground(rgba((int)(fogC.x * 255), (int)(fogC.y * 255), (int)(fogC.z * 255)));
+        // Render scale < 100%: the world goes to a smaller texture and gets stretched; HUD/menus draw at full size
+        static RenderTexture2D sceneRT{};
+        float rs = RSCALE[cfg.rscale];
+        int sw = std::max(64, (int)(W * rs)), sh = std::max(64, (int)(H * rs));
+        bool lowRes = rs < .99f;
+        if (lowRes) {
+            if (sceneRT.id == 0 || sceneRT.texture.width != sw || sceneRT.texture.height != sh) {
+                if (sceneRT.id)
+                    UnloadRenderTexture(sceneRT);
+                sceneRT = LoadRenderTexture(sw, sh);
+                SetTextureFilter(sceneRT.texture, TEXTURE_FILTER_BILINEAR);
+            }
+            BeginTextureMode(sceneRT);
+            ClearBackground(rgba((int)(fogC.x * 255), (int)(fogC.y * 255), (int)(fogC.z * 255)));
+        }
         BeginMode3D(cam3);
         renderWorld3D();
         EndMode3D();
+        if (lowRes) {
+            EndTextureMode();
+            DrawTexturePro(sceneRT.texture, {0, 0, (float)sw, -(float)sh}, {0, 0, (float)W, (float)H}, V2(0, 0), 0,
+                           WHITE);
+        }
         pm(pWorld);
         static const bool glDebug = getenv("NF_GLDEBUG") != nullptr; // run with NF_GLDEBUG=1 to log this once a second
         static int dbgFrame = 0;
