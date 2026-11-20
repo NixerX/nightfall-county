@@ -6,13 +6,21 @@ static float diffK() {
     static const float base[4] = {.7f, 1.f, 1.3f, 1.65f};
     return base[cfg.diff];
 }
+// per-day growth by difficulty (Easy, Normal, Hard, Nightmare). TUNE here.
+static const float DAY_HP[4] = {.05f, .07f, .10f, .12f};  // zombie health per day survived
+static const float DAY_DMG[4] = {.03f, .04f, .05f, .06f}; // zombie damage per day survived
+static int hordeSize(int day) {
+    static const int base[4] = {15, 20, 18, 22}, per[4] = {4, 6, 9, 12}, cap[4] = {50, 80, 150, 9999};
+    int d = cfg.diff;
+    return std::min(cap[d], base[d] + per[d] * day);
+}
 static int playerLevel();
 static float scaleK() {
     return diffK() * (1 + .07f * (playerLevel() - 1));
 } // zombies get tougher as you level up
 static Zombie& spawnZ(int type, Vector2 p) {
     const ZDef& t = ZT[type];
-    float s = 1 + .12f * (dayN() - 1);
+    float s = 1 + DAY_HP[cfg.diff] * (dayN() - 1);
     Zombie z{};
     z.id = ++zid;
     z.type = type;
@@ -20,7 +28,7 @@ static Zombie& spawnZ(int type, Vector2 p) {
     z.r = t.r;
     z.hp = z.mhp = t.hp * s * (type == Z_BRUTE ? diffK() : scaleK()); // brutes skip level scaling
     z.spd = t.spd * frand(.85f, 1.15f) * (cfg.diff >= 2 ? 1.08f : cfg.diff == 0 ? .92f : 1);
-    z.dmg = t.dmg * (1 + .06f * (dayN() - 1)) * (.6f + .4f * scaleK());
+    z.dmg = t.dmg * (1 + DAY_DMG[cfg.diff] * (dayN() - 1)) * (.6f + .4f * scaleK());
     z.seed = frand(0, 10);
     z.a = frand(0, 2 * PI);
     z.side = chance(.5f) ? 1 : -1;

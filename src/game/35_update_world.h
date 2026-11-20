@@ -397,7 +397,7 @@ static void update(float dt) {
     // horde
     if (!horde.on && hordeDay < dayN() && hourOf() > 13 && hourOf() < 18 && dayN() >= 2) {
         hordeDay = dayN();
-        horde = {true, frand(0, 2 * PI), 0, 22 + dayN() * 12};
+        horde = {true, frand(0, 2 * PI), 0, hordeSize(dayN())};
         horde.end = Vector2Add(Vector2Add(P.p, polar(horde.a + PI, 150)), polar(horde.a + PI / 2, frand(-40, 40)));
         horde.lastSeen = P.p;
         static const char* dirs[8] = {"EAST", "SOUTHEAST", "SOUTH", "SOUTHWEST",

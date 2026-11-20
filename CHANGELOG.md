@@ -14,6 +14,8 @@
 - Stamina: sprinting drains about 20% less, it starts coming back sooner after you stop and refills over 50% faster. Both get better every level: costs drop 2% a level (up to 30% off), refill speeds up 5% a level (up to +60%).
 - Brutes toned down: 240 HP (was 300), hits for 19 (was 26) and swings every 1.5 s instead of every second, charge hits a bit softer and knocks you back less, broken leg from a charge 4% (was 8%).
 - Crouch-walking actually moves your legs again (the stride was scaled to full walking speed, so at crouch speed it barely moved).
+- Hordes scale with difficulty now. Nightmare is unchanged (22 + 12 a day, no cap). Hard: 18 + 9 a day, max 150. Normal: 20 + 6 a day, max 80 (day 9 is 74 instead of 130). Easy: 15 + 4 a day, max 50.
+- Zombies toughen up more slowly on the easier settings. Health per day survived: Easy +5%, Normal +7%, Hard +10%, Nightmare +12% (was +12% on everything). Damage per day: +3/4/5/6% (was +6%).
 - Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9
