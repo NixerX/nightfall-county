@@ -136,7 +136,9 @@ static Vector3 buildPose(const Rig& r, const PoseIn& in, std::vector<Quaternion>
         root.y = fabsf(s) * .03f;
     } else if (in.kind == PK_PLAYER) {
         float runK = pclamp((mv - 1.1f) / .7f, 0, 1), cr = in.crouch;
-        float stride = walkK * plerp(.5f, .85f, runK) * (1 - cr * .35f);
+        // crouch-walking is half speed: measure the stride against crouch speed so the legs still really step
+        walkK = pclamp(mv / (1 - cr * .5f), 0, 1); idleK = 1 - walkK;
+        float stride = walkK * plerp(.5f, .85f, runK) * (1 - cr * .1f);
         float ul0 = -s * stride - cr * 1.1f, ul1 = s * stride - cr * 1.1f;
         float knee = plerp(1.25f, 1.75f, runK);
         float ll0 = max0(c) * stride * knee + .06f + cr * 1.8f, ll1 = max0(-c) * stride * knee + .06f + cr * 1.8f;
