@@ -34,10 +34,10 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
         return;
     if (P.blocking && srcType >= 0 && srcType < 99 &&
         fabsf(angDiff(atan2f(src.y - P.p.y, src.x - P.p.x), P.a)) < 1.2f) { // blocked from the front
-        float cost = (P.shieldHP > 0 ? 5.f : 11.f) * STA_K;
+        float cost = (P.shieldHP > 0 ? 5.f : 11.f) * staK();
         if (P.sta >= cost) {
             P.sta -= cost;
-            P.staD = .7f;
+            P.staD = .45f;
             float red = std::min(.95f, (P.shieldHP > 0 ? .88f : .6f) + P.perks.block);
             float taken = dmg * (1 - red);
             if (P.shieldHP > 0) {
@@ -86,12 +86,12 @@ static void hitPlayer(float dmg, Vector2 src, int srcType) {
             P.sick = 1;
             msg("You feel sick. Find antibiotics.", rgba(170, 200, 90));
         }
-        if (srcType == Z_BRUTE && bruteCharge && chance(.08f) && !P.broken) {
+        if (srcType == Z_BRUTE && bruteCharge && chance(.04f) && !P.broken) {
             P.broken = true;
             msg("Your leg is broken. Morphine will fix it.", BLOODC);
         }
         float a = atan2f(P.p.y - src.y, P.p.x - src.x);
-        P.k = Vector2Add(P.k, polar(a, srcType == Z_BRUTE ? 14.f : 4.f));
+        P.k = Vector2Add(P.k, polar(a, srcType == Z_BRUTE ? 10.f : 4.f));
     }
     if (P.hp <= 0)
         die();

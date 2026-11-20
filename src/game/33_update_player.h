@@ -289,8 +289,8 @@ static void updatePlayer(float dt) {
                    (P.reload > 0 ? .8f : 1) * legFactor() * dirK * (P.food <= 0 || P.water <= 0 ? .8f : 1) *
                    P.perks.speed;
         if (P.sprint) {
-            P.sta -= 16 * STA_K * P.perks.sta * dt;
-            P.staD = .8f;
+            P.sta -= 13 * staK() * P.perks.sta * dt; // TUNE: sprint drain (was 16)
+            P.staD = .5f;
         }
         Vector2 tv = Vector2Scale(in, sp);
         P.vel = Vector2Lerp(
@@ -361,7 +361,7 @@ static void updatePlayer(float dt) {
         }
     }
     if (P.staD <= 0)
-        P.sta = std::min(100.f, P.sta + 18 * dt * (P.food > 20 ? 1 : .4f));
+        P.sta = std::min(100.f, P.sta + 28 * staRegenK() * dt * (P.food > 20 ? 1 : .5f)); // TUNE: regen (was 18)
     if (P.loft >= 0) {
         const Loft& L = lofts[P.loft];
         P.k = V2(0, 0);

@@ -57,6 +57,13 @@ struct Player {
     Color fpC{};
 };
 static Player P;
+// stamina gets better as you level: costs drop 2%/level (to -30% at 16), regen climbs 5%/level (to +60% at 13)
+static float staK() {
+    return STA_K * std::max(.7f, 1 - .02f * (P.lvl - 1));
+}
+static float staRegenK() {
+    return std::min(1.6f, 1 + .05f * (P.lvl - 1));
+}
 static bool haveChopper() { // in hand or on the belt
     return canChop(P.melee) || canChop(P.tool);
 }

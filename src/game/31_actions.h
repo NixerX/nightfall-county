@@ -62,11 +62,11 @@ static void dodge() {
         return;
     if (P.roll > 0 || P.rollCd > 0 || P.broken)
         return;
-    float cost = 25 * STA_K;
+    float cost = 25 * staK();
     if (P.sta < cost)
         return;
     P.sta -= cost;
-    P.staD = .8f;
+    P.staD = .5f;
     Vector2 in = V2((float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)), (float)(IsKeyDown(KEY_S) - IsKeyDown(KEY_W)));
     if (Vector2Length(in) < .1f)
         in = polar(P.a, 1);
@@ -82,7 +82,7 @@ static void dodge() {
 static void shove() { // quick two-handed push for the one that's in your face
     if (P.shoveCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 6)
         return;
-    P.sta -= 6 * STA_K;
+    P.sta -= 6 * staK();
     P.staD = .4f;
     P.shoveCd = .4f;
     P.kickT = 0;
@@ -124,10 +124,10 @@ static bool tryVault() { // Space into a low obstacle (fence, crate, car, rock, 
     for (float t = tObs + .3f; t < tObs + 3.5f; t += .15f) {
         Vector2 q = Vector2Add(P.p, Vector2Scale(dir, t));
         if (freeAt(q.x, q.y, .36f)) {
-            if (P.sta < 10 * STA_K)
+            if (P.sta < 10 * staK())
                 return true;
-            P.sta -= 10 * STA_K;
-            P.staD = .6f;
+            P.sta -= 10 * staK();
+            P.staD = .4f;
             P.vaultA = P.p;
             P.vaultB = q;
             P.vaultT = .45f;
@@ -143,10 +143,10 @@ static bool tryVault() { // Space into a low obstacle (fence, crate, car, rock, 
     return false;
 }
 static void kick() {
-    if (P.kickCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 14 * STA_K || P.broken)
+    if (P.kickCd > 0 || P.roll > 0 || P.loft >= 0 || P.sta < 14 * staK() || P.broken)
         return;
-    P.sta -= 14 * STA_K;
-    P.staD = .6f;
+    P.sta -= 14 * staK();
+    P.staD = .4f;
     P.kickCd = .75f;
     P.kickT = .35f;
     bool hit = false;
@@ -184,7 +184,7 @@ static bool melee() {
     const MBase& m = MB[P.melee];
     if (P.swingCd > 0 || P.roll > 0 || P.blocking)
         return false;
-    if (P.sta < m.sta * STA_K) {
+    if (P.sta < m.sta * staK()) {
         static float tiredMsgT = -10;
         if (GetTime() - tiredMsgT > 2) {
             msg("Too winded to swing. Back off and catch your breath.", STEEL);
@@ -192,8 +192,8 @@ static bool melee() {
         }
         return false;
     }
-    P.sta -= m.sta * STA_K;
-    P.staD = .6f;
+    P.sta -= m.sta * staK();
+    P.staD = .4f;
     if (alarm.on && Vector2Distance(P.p, alarm.p) < 3.5f) {
         alarm.on = false;
         msg("You smash the alarm quiet.", BONE);

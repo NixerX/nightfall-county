@@ -363,7 +363,7 @@ static void updateZombies(float dt) {
                                      rgba(90, 80, 70, 150), P_DUST});
                 if (d < z.r + .5f && !wallBetween(z.p, P.p)) {
                     bruteCharge = true;
-                    hitPlayer(z.dmg * 1.3f, z.p, Z_BRUTE);
+                    hitPlayer(z.dmg * 1.15f, z.p, Z_BRUTE);
                     bruteCharge = false;
                     z.chgT = 0;
                 } else if (z.chgT <= 0)
@@ -489,7 +489,7 @@ static void updateZombies(float dt) {
                 if (chance(.4f))
                     msg("It grabbed your ankle!", BLOODC);
             } else if (z.atk <= 0) {
-                z.atk = z.type == Z_VOLATILE ? .6f : .95f;
+                z.atk = z.type == Z_VOLATILE ? .6f : z.type == Z_BRUTE ? 1.5f : .95f; // brutes: slow, heavy swings
                 if (chance(.45f))
                     sfxAt(z.type == Z_BRUTE      ? SFX_ROAR
                           : z.type == Z_VOLATILE ? SFX_SCREAM

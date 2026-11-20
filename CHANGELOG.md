@@ -11,6 +11,8 @@
 - F3 (or `) shows a performance overlay: milliseconds per part of the frame and how many zombies, corpses, decals, lights and so on are alive.
 - Belt slot for a hatchet or axe. Pick one up while you're holding another melee weapon and it goes on your belt instead of swapping; pick up something else while holding a hatchet and the hatchet moves to the belt. A belt hatchet still chops trees (just swing at one) and splits logs. T swaps hand and belt. Shows under your weapon on the HUD.
 - Fullscreen is now borderless at your screen's own resolution (switching screen modes left the inventory/settings stuck on screen on Linux). New Settings > Render scale (100/85/70/55%) draws the world at fewer pixels while the HUD and menus stay sharp: use that instead of dropping the resolution on a laptop.
+- Stamina: sprinting drains about 20% less, it starts coming back sooner after you stop and refills over 50% faster. Both get better every level: costs drop 2% a level (up to 30% off), refill speeds up 5% a level (up to +60%).
+- Brutes toned down: 240 HP (was 300), hits for 19 (was 26) and swings every 1.5 s instead of every second, charge hits a bit softer and knocks you back less, broken leg from a charge 4% (was 8%).
 - Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9
