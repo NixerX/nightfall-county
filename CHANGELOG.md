@@ -9,6 +9,7 @@
 - Older saves load fine and just get fresh traders.
 - Camera turns (turn it on in Settings > Camera rotation; off by default). Drag with the middle mouse button to orbit around yourself (sideways) and tilt (up/down); a plain middle click still swings. Or hold , and . to rotate, PgUp/PgDn to tilt, End to reset. WASD always moves relative to the screen. A compass (top right) shows north once you've turned; the map stays north-up.
 - F3 shows a performance overlay: milliseconds per part of the frame and how many zombies, corpses, decals, lights and so on are alive.
+- Belt slot for a hatchet or axe. Pick one up while you're holding another melee weapon and it goes on your belt instead of swapping; pick up something else while holding a hatchet and the hatchet moves to the belt. A belt hatchet still chops trees (just swing at one) and splits logs. T swaps hand and belt. Shows under your weapon on the HUD.
 - Map back to 1.6 km across (a quarter of the area) for testing. Towns, farms, forests and hot zones scale down with it. Saves from 0.8.x start a new life.
 
 ## v0.8.9

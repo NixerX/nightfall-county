@@ -104,7 +104,8 @@ static void drawInventory() {
             } else
                 text("-", r.x + 6, r.y + 14, 13, STEEL);
         } else {
-            text("MELEE", r.x + 6, r.y + 2, 10, rgba(110, 116, 126));
+            text(P.tool != MK_FISTS ? TextFormat("MELEE  +belt: %s (T)", MB[P.tool].n) : "MELEE", r.x + 6, r.y + 2, 10,
+                 rgba(110, 116, 126));
             text(MB[P.melee].n, r.x + 6, r.y + 14, 13, BONE);
             if (hov && rp && P.melee != MK_FISTS) {
                 Loot o;
@@ -321,7 +322,7 @@ static void drawInventory() {
         } rs[5] = {
             {"Splint", "2 kindling + bandage/rag", invCount(IT_KINDLING) >= 2 && rag, 0},
             {"Campfire", "3 kindling + 1 match, outdoors", invCount(IT_KINDLING) >= 3 && invCount(IT_MATCHES) >= 1, 1},
-            {"Split a log", "1 log, axe/hatchet in hand", invCount(IT_LOG) >= 1 && canChop(P.melee), 2},
+            {"Split a log", "1 log + axe/hatchet (hand or belt)", invCount(IT_LOG) >= 1 && haveChopper(), 2},
             {P.shieldHP > 0 ? "Repair shield" : "Plank shield", "1 log + 3 kindling + rope or tape",
              invCount(IT_LOG) >= 1 && invCount(IT_KINDLING) >= 3 && (invCount(IT_ROPE) || invCount(IT_TAPE)), 3},
             {"Tear clothes into rags", "Drag a shirt here: 2-4 rags", false, 4}};

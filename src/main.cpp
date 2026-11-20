@@ -232,6 +232,13 @@ int main() {
                 melee();
             if (IsKeyPressed(KEY_F))
                 toggleLight();
+            if (IsKeyPressed(KEY_T) && P.tool != MK_FISTS) { // swap hand <-> belt
+                std::swap(P.melee, P.tool);
+                msg(std::string("In hand: ") + MB[P.melee].n +
+                        (P.tool != MK_FISTS ? std::string(". Belt: ") + MB[P.tool].n : std::string()),
+                    BONE);
+                sfx(SFX_PICK, .5f);
+            }
             if (IsKeyPressed(KEY_U) && P.light)
                 P.uv = !P.uv;
             if (IsKeyPressed(KEY_C))

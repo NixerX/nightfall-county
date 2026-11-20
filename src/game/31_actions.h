@@ -230,11 +230,11 @@ static bool melee() {
         if (canChop(P.melee))
             sfx(SFX_CHOP, .6f);
         shake = std::min(.4f, shake + .15f);
-    } else if (canChop(P.melee) || P.melee == MK_KNIFE || P.melee == MK_MACHETE) {
+    } else if (haveChopper() || P.melee == MK_KNIFE || P.melee == MK_MACHETE) {
         // nothing alive in reach: chop the nearest tree in front of you (axe, hatchet), or cut at a bush (any blade)
         Tree* tb = nullptr;
         float bd = 1e9f;
-        if (canChop(P.melee))
+        if (haveChopper()) // a belt hatchet does the chopping if what's in your hand can't
             for (int cx = gcl(P.p.x - 4); cx <= gcl(P.p.x + 4); cx++)
                 for (int cz = gcl(P.p.y - 4); cz <= gcl(P.p.y + 4); cz++)
                     for (int ti : tgrid[cx][cz]) {
@@ -545,9 +545,9 @@ static void useItem(InvItem* it) {
         }
         break;
     case IT_LOG:
-        if (!canChop(P.melee)) {
+        if (!haveChopper()) {
             used = false;
-            msg("You need an axe or hatchet in hand to split it.", STEEL);
+            msg("You need an axe or hatchet, in hand or on your belt, to split it.", STEEL);
         } else {
             it->n--;
             invPrune();
@@ -764,6 +764,19 @@ static void pickUp() {
         else
             sfx(SFX_PICK);
     } else {
+        if (canChop(l.id) && P.melee != MK_FISTS && !canChop(P.melee) && P.tool == MK_FISTS) {
+            P.tool = l.id; // keep fighting with what you've got, chop with this
+            msg(std::string(MB[l.id].n) + " on your belt for chopping. T swaps it into your hand.", BONE);
+            sfx(SFX_PICK);
+            return;
+        }
+        if (canChop(P.melee) && !canChop(l.id) && P.tool == MK_FISTS) {
+            P.tool = P.melee; // the hatchet goes on the belt instead of the ground
+            P.melee = l.id;
+            msg("Equipped " + std::string(MB[l.id].n) + ". " + MB[P.tool].n + " on your belt (T swaps).", BONE);
+            sfx(SFX_PICK);
+            return;
+        }
         if (P.melee != MK_FISTS) {
             Loot o;
             o.kind = LK_MELEE;

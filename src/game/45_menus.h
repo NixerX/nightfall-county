@@ -34,6 +34,7 @@ static void drawTitle() {
                              {"B / N", "Bandage / best meds"},
                              {"X", "Autorun"},
                              {"P / Esc", "Pause"},
+                             {"T", "Swap hand / belt hatchet"},
                              {"MMB drag / , .", "Turn camera (turn on in Settings)"}};
     const int nk = sizeof keys / sizeof *keys;
     for (int i = 0; i < nk; i++) {

@@ -83,6 +83,7 @@ static void newGame(unsigned seed = 0) {
     std::string s1 = randomSkillPoint(), s2 = randomSkillPoint();
     P.hp = P.perks.maxhp;
     P.melee = MK_FISTS;
+    P.tool = MK_FISTS;
     P.active = 2;
     P.batt = 35;
     dressStart();

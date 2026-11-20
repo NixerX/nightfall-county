@@ -128,7 +128,8 @@ static void saveGame() {
     o << "G3 " << P.hasGun[3] << '\n'; // long gun 2 (added later: optional, so older saves still load)
     if (P.hasGun[3])
         wGun(o, P.gun[3]);
-    saveTraders(o); // optional block: older saves load without it
+    o << "TL " << P.tool << '\n'; // belt tool (optional block)
+    saveTraders(o);               // optional block: older saves load without it
     o << "END\n";
 }
 static bool loadGame() {
@@ -217,6 +218,12 @@ static bool loadGame() {
         in >> P.hasGun[3];
         if (P.hasGun[3])
             P.gun[3] = rGun(in);
+        in >> tag;
+    }
+    if (tag == "TL") {
+        in >> P.tool;
+        if (P.tool < 0 || P.tool >= MK_COUNT)
+            P.tool = MK_FISTS;
         in >> tag;
     }
     if (tag == "TR") {

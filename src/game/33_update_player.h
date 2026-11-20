@@ -304,7 +304,7 @@ static void updatePlayer(float dt) {
             tipT -= dt;
             if (tipT <= 0) {
                 tipT = .5f;
-                bool chop = canChop(P.melee), blade = chop || P.melee == MK_KNIFE || P.melee == MK_MACHETE;
+                bool chop = haveChopper(), blade = chop || P.melee == MK_KNIFE || P.melee == MK_MACHETE;
                 if (chop && !tipTree)
                     for (int cx = gcl(P.p.x - 2); cx <= gcl(P.p.x + 2) && !tipTree; cx++)
                         for (int cz = gcl(P.p.y - 2); cz <= gcl(P.p.y + 2) && !tipTree; cz++)

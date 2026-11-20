@@ -23,6 +23,7 @@ struct Player {
     Weapon gun[4]; // 0 long gun, 1 sidearm, 2 unused (index 2 means melee in P.active), 3 long gun 2
     bool hasGun[4] = {false, false, false, false};
     int melee = MK_FISTS;
+    int tool = MK_FISTS; // belt slot: a hatchet/axe carried for chopping while you fight with something else
     int active = 2;
     std::shared_ptr<Cloth> eq[CS_COUNT];
     float wet = 0;
@@ -56,3 +57,6 @@ struct Player {
     Color fpC{};
 };
 static Player P;
+static bool haveChopper() { // in hand or on the belt
+    return canChop(P.melee) || canChop(P.tool);
+}
