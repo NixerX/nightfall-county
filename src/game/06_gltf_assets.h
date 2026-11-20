@@ -438,9 +438,11 @@ static unsigned poseFrame = 1; // bumped once per rendered frame: each character
 static int outfitLook();       // applies worn clothes to the player look
 // lie: 0 standing, 1 lying face down (head toward yaw), -1 lying face up (head away from yaw); in between = falling.
 // A lying body is centred on pos; a falling one pivots on its feet, which sit .88 behind (or ahead of) pos.
+static int dbgCharDraws = 0; // perf overlay: skinned characters drawn this frame (zombies, corpses, gibs, NPCs)
 static void drawCharacter(int lookIdx, const PoseIn& pin, Vector2 pos, float yaw, Color tint, float tintAmt, float lie,
                           CharOut* out = nullptr, float alpha = 1, PoseState* ps = nullptr,
                           const float* wnd = nullptr) {
+    dbgCharDraws++;
     Look& L = looks[lookIdx];
     Asset& a = assets[L.asset];
     static std::vector<Quaternion> D;

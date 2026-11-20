@@ -422,21 +422,25 @@ int main() {
             int nz = 0;
             for (auto& z : zombies)
                 nz += !z.dead;
-            DrawRectangle(8, 8, 330, 196, rgba(0, 0, 0, 190));
-            const char* lines[] = {
-                TextFormat("FPS %d   frame %.1f ms", GetFPS(), GetFrameTime() * 1000),
-                TextFormat("update  %5.2f   fades %5.2f", pUpd, pFade),
-                TextFormat("shadows %5.2f   world %5.2f", pShad, pWorld),
-                TextFormat("hud/ui  %5.2f   swap  %5.2f", pUi, pSwap),
-                TextFormat("zombies %d  corpses %d  gibs %d", nz, (int)corpses.size(), (int)gibs.size()),
-                TextFormat("decals %d  parts %d  lights %d", (int)decals.size(), (int)parts.size(), (int)lights.size()),
-                TextFormat("loot %d  traders %d  props %d", (int)loot.size(), (int)traders.size(), (int)props.size()),
-                TextFormat("shadows %d  foliage %d  %dx%d", cfg.shadows, cfg.foliage, GetRenderWidth(),
-                           GetRenderHeight()),
-                "swap high = GPU-bound; update/world high = CPU"};
-            for (int i = 0; i < 9; i++)
-                DrawText(lines[i], 16, 14 + i * 20, 16, i == 8 ? GRAY : RAYWHITE);
+            DrawRectangle(8, 8, 360, 216, rgba(0, 0, 0, 190));
+            char ln[10][96]; // own buffers: raylib's TextFormat only keeps 4 strings alive
+            snprintf(ln[0], 96, "FPS %d   frame %.1f ms", GetFPS(), GetFrameTime() * 1000);
+            snprintf(ln[1], 96, "update  %5.2f   fades %5.2f", pUpd, pFade);
+            snprintf(ln[2], 96, "shadows %5.2f   world %5.2f", pShad, pWorld);
+            snprintf(ln[3], 96, "hud/ui  %5.2f   swap  %5.2f", pUi, pSwap);
+            snprintf(ln[4], 96, "chars drawn %d (zombies, corpses, gibs)", dbgCharDraws);
+            snprintf(ln[5], 96, "zombies %d  corpses %d  gibs %d", nz, (int)corpses.size(), (int)gibs.size());
+            snprintf(ln[6], 96, "decals %d  parts %d  lights %d", (int)decals.size(), (int)parts.size(),
+                     (int)lights.size());
+            snprintf(ln[7], 96, "loot %d  traders %d  props %d", (int)loot.size(), (int)traders.size(),
+                     (int)props.size());
+            snprintf(ln[8], 96, "shadows %d  foliage %d  %dx%d", cfg.shadows, cfg.foliage, GetRenderWidth(),
+                     GetRenderHeight());
+            snprintf(ln[9], 96, "swap high = GPU-bound; update/world high = CPU");
+            for (int i = 0; i < 10; i++)
+                DrawText(ln[i], 16, 14 + i * 20, 16, i == 9 ? GRAY : RAYWHITE);
         }
+        dbgCharDraws = 0;
         pm(pUi);
         EndDrawing();
         pm(pSwap); // waiting on the GPU / vsync
