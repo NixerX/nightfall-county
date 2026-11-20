@@ -138,7 +138,7 @@ int main() {
             acc += ((float)((n - tMark) * 1000) - acc) * .1f;
             tMark = n;
         };
-        if (IsKeyPressed(KEY_F3))
+        if (IsKeyPressed(KEY_F3) || IsKeyPressed(KEY_GRAVE)) // ` too: laptop F-keys are often media keys
             perfOn = !perfOn;
         tMark = GetTime();
         if (slowMo > 0 && state == ST_PLAY) { // the odd spectacular kill gets a beat of slow motion
