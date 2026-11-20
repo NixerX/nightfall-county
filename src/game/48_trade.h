@@ -3,7 +3,7 @@
 // Lower files reach this through forward declarations (interaction, update, render, map, HUD, save, new game).
 #pragma once
 // ============================================================ traders
-// Kinds: 0 town trader (a stall in most towns), 1 wandering trader (walks town to town),
+// Kinds: 0 town trader (a pawn shop in most towns), 1 wandering trader (walks town to town),
 // 2 survivor (reserved: rescued survivors will open the same barter screen via openTrade once they exist).
 // Barter by value: their goods count at full value, yours at their buy rate (they need a cut). No currency.
 
@@ -24,8 +24,8 @@ struct TOffer {
 struct Trader {
     int kind = 0;
     std::string name;
-    int town = -1, look = -1;
-    Vector2 p{}, stall{}, to{};
+    int town = -1, look = -1, bld = -1; // bld: the shop a town trader works out of (not saved: found from p)
+    Vector2 p{}, stall{}, to{}; // stall: the shop counter (town traders)
     float a = 0, hp = 160, rest = 0, walk = 0, shotCd = 0, hurtT = 0, stuckT = 0, flash = 0;
     Vector2 stuckP{};
     bool alive = true, friendly = false, raid = false, moving = false;
@@ -136,6 +136,33 @@ static Vector2 townSpot(int ti, float rk) {
     }
     return T.c;
 }
+// town traders run a pawn shop: a store (or gas station) in town, standing behind its counter.
+// Stores get their counter at (x1-1.2, z0+1.0) in 10_buildings.h, so the trader stands between it and the back wall.
+static bool findShop(int ti, int& bi, Vector2& spot, Vector2& counter) {
+    std::vector<int> c;
+    for (int pass = 0; pass < 2 && c.empty(); pass++)
+        for (int i = 0; i < (int)blds.size(); i++) {
+            const Building& b = blds[i];
+            if (b.town != ti || !b.enter || b.cellKind || b.doors.empty() || (b.type != (pass ? B_GAS : B_STORE)))
+                continue;
+            Vector2 sp = V2(b.x1 - 1.2f, b.z0 + .45f);
+            bool doorClose = false;
+            for (auto& d : b.doors)
+                doorClose |= Vector2Distance(d.in, sp) < 2.2f;
+            bool taken = false;
+            for (auto& t : traders)
+                taken |= t.bld == i;
+            if (!doorClose && !taken && b.x1 - b.x0 > 4 && b.z1 - b.z0 > 4)
+                c.push_back(i);
+        }
+    if (c.empty())
+        return false;
+    bi = pick(c);
+    const Building& b = blds[bi];
+    spot = V2(b.x1 - 1.2f, b.z0 + .45f);
+    counter = V2(b.x1 - 1.2f, b.z0 + 1.0f);
+    return true;
+}
 static void genTraders() { // called at the end of newGame: every life gets its own traders
     traders.clear();
     tradeWith = -1;
@@ -152,16 +179,12 @@ static void genTraders() { // called at the end of newGame: every life gets its 
         Trader t;
         t.kind = 0;
         t.town = ti;
+        if (!findShop(ti, t.bld, t.p, t.stall))
+            continue; // no shop in this town this life
         int ni = irand(0, (int)names.size() - 1);
         t.name = names[ni];
         names.erase(names.begin() + ni);
-        t.stall = townSpot(ti, .45f);
-        t.a = atan2f(TOWNS[ti].c.y - t.stall.y, TOWNS[ti].c.x - t.stall.x);
-        t.p = Vector2Add(t.stall, polar(t.a, 1.1f)); // stands in front of the stall
-        {                                            // the table blocks you (box around the turned table)
-            float c = fabsf(cosf(t.a)), sn = fabsf(sinf(t.a)), hx = c * .4f + sn * .9f, hz = sn * .4f + c * .9f;
-            addSolid(t.stall.x - hx, t.stall.y - hz, t.stall.x + hx, t.stall.y + hz, .9f, SK_CAR);
-        }
+        t.a = PI / 2; // facing into the shop, over the counter
         t.look = survivorLook();
         restock(t);
         traders.push_back(t);
@@ -204,7 +227,7 @@ static std::string traderWhere(const Trader& t) {
         return "Wandering trader";
     if (t.kind == 2)
         return "Survivor";
-    return std::string("Trader, ") + (t.town >= 0 ? TOWNS[t.town].name : "the county");
+    return std::string("Pawn shop, ") + (t.town >= 0 ? TOWNS[t.town].name : "the county");
 }
 
 // ---- barter screen state
@@ -217,7 +240,7 @@ static void openTrade(int i) {
         return;
     Trader& t = traders[i];
     if (t.kind == 0 && t.stockDay < dayN())
-        restock(t); // town stalls restock every morning
+        restock(t); // pawn shops restock every morning
     tradeWith = i;
     theirQ.assign(t.stock.size(), 0);
     memset(yItemQ, 0, sizeof yItemQ);
@@ -421,7 +444,7 @@ static void traderDies(Trader& t) {
     for (auto& o : t.stock) {
         if (n++ >= 16)
             break;
-        Vector2 q = Vector2Add(t.stall, V2(frand(-1.2f, 1.2f), frand(-1.2f, 1.2f)));
+        Vector2 q = Vector2Add(t.stall, V2(frand(-1.f, 1.f), frand(.5f, 1.5f))); // spills out on the shop floor
         if (o.kind == 0)
             spawnItem(xz3(q, .05f), o.id, std::min(o.n, IDEF[o.id].stack));
         else if (o.kind == 1)
@@ -432,7 +455,7 @@ static void traderDies(Trader& t) {
     t.stock.clear();
     if (tradeWith >= 0 && &traders[tradeWith] == &t)
         closeTrade();
-    showBanner("TRADER DOWN", t.name + " didn't make it. Their stall's up for grabs.", BLOODC);
+    showBanner("TRADER DOWN", t.name + " didn't make it. Their stock's up for grabs.", BLOODC);
 }
 static void traderShoot(Trader& t, float range) {
     Zombie* tg = nullptr;
@@ -567,31 +590,42 @@ static void drawTraders() {
     for (auto& t : traders) {
         if (Vector2Distance(t.p, camPos) > 80)
             continue;
-        if (t.kind == 0) { // the stall: table, crates, a tarp on four posts
-            float y = t.a;
-            Vector2 s = t.stall;
-            drawTexMesh(M_CUBE, TRS(V3(s.x, .82f, s.y), V3(.7f, .06f, 1.7f), y), rgba(150, 120, 90), TX_PLYWOOD);
-            for (int k = 0; k < 4; k++) {
-                Vector2 lp =
-                    Vector2Add(s, Vector2Add(polar(y, k < 2 ? .3f : -.3f), polar(y + PI / 2, k % 2 ? .78f : -.78f)));
-                drawMeshM(M_CUBE, TRS(V3(lp.x, .4f, lp.y), V3(.06f, .8f, .06f), y), rgba(70, 54, 40));
-            }
-            for (int k = 0; k < 4; k++) {
-                Vector2 pp =
-                    Vector2Add(s, Vector2Add(polar(y, k < 2 ? 1.2f : -.9f), polar(y + PI / 2, k % 2 ? 1.2f : -1.2f)));
-                drawMeshM(M_CUBE, TRS(V3(pp.x, 1.15f, pp.y), V3(.08f, 2.3f, .08f), y), rgba(80, 66, 50));
-            }
-            drawMeshM(M_CUBE, TRS(V3(s.x + cosf(y) * .15f, 2.32f, s.y + sinf(y) * .15f), V3(2.4f, .04f, 2.7f), y),
-                      rgba(64, 88, 62));
-            for (int k = 0; k < 3; k++) {
-                Vector2 cp = Vector2Add(s, Vector2Add(polar(y, -.75f), polar(y + PI / 2, -.8f + k * .8f)));
-                drawTexMesh(M_CUBE, TRS(V3(cp.x, .25f + (k == 1) * .5f, cp.y), V3(.5f, .5f, .5f), y + k * .3f),
-                            rgba(140, 110, 70), TX_PLANK);
-            }
+        if (t.kind == 0 && t.bld >= 0) { // pawn shop dressing: glass case on the counter, gun rack, guitars, a TV stack
+            const Building& b = blds[t.bld];
+            Vector2 c = t.stall;
+            drawMeshM(M_CUBE, TRS(V3(c.x, 1.12f, c.y), V3(1.6f, .22f, .6f), 0), rgba(170, 205, 215)); // glass case
+            drawMeshM(M_CUBE, TRS(V3(c.x - .3f, 1.08f, c.y), V3(.25f, .06f, .2f), .4f), rgba(220, 190, 70));
+            drawMeshM(M_CUBE, TRS(V3(c.x + .35f, 1.06f, c.y + .05f), V3(.3f, .05f, .15f), -.3f), rgba(60, 60, 64));
+            float rx = b.x1 - 2.6f, rz = b.z0 + .35f; // free-standing gun rack behind the counter
+            drawTexMesh(M_CUBE, TRS(V3(rx, .9f, rz), V3(1.1f, 1.8f, .12f), 0), rgba(90, 64, 44), TX_PLANK);
             setTexMode(0);
-            Vector2 lp = Vector2Add(s, polar(y + PI / 2, .6f)); // lantern on the table
-            drawMeshM(M_CUBE, TRS(V3(lp.x, .95f, lp.y), V3(.12f, .2f, .12f), y),
-                      darkK() > .3f ? rgba(255, 210, 120) : rgba(120, 100, 60));
+            for (int k = 0; k < 3; k++)
+                drawMeshM(M_CUBE, TRS(V3(rx - .35f + k * .35f, 1.0f, rz + .1f), V3(.07f, 1.25f, .07f), 0),
+                          k == 1 ? rgba(110, 80, 50) : rgba(40, 40, 44));
+            static const Color GC[3] = {{150, 60, 30, 255}, {20, 20, 22, 255}, {170, 30, 36, 255}};
+            for (int k = 0; k < 3; k++) { // guitars on stands along the side wall
+                float gz = b.z0 + 2.4f + k * .7f, gx = b.x1 - .45f;
+                if (gz > b.z1 - 1)
+                    break;
+                drawMeshM(M_SPHERE, TRS(V3(gx, .45f, gz), V3(.16f, .42f, .3f), 0), GC[k]);
+                drawMeshM(M_CUBE, TRS(V3(gx + .02f, 1.0f, gz), V3(.05f, .75f, .06f), 0), rgba(60, 40, 28));
+            }
+            Vector2 tv = V2(b.x1 - .5f, b.z1 - .8f);
+            if (tv.y > b.z0 + 4.5f)
+                for (int k = 0; k < 2; k++)
+                    drawMeshM(M_CUBE, TRS(V3(tv.x, .3f + k * .55f, tv.y), V3(.6f, .5f, .5f), 0),
+                              k ? rgba(50, 50, 54) : rgba(80, 70, 60));
+            if (!b.doors.empty()) { // the sign over the door
+                const Door& d = b.doors[0];
+                Vector2 n = Vector2Normalize(Vector2Subtract(d.out, d.in));
+                Vector2 m = Vector2Scale(Vector2Add(d.out, d.in), .5f);
+                Vector2 sp = Vector2Add(m, Vector2Scale(n, .3f));
+                float yaw = atan2f(n.y, n.x) + PI / 2;
+                bool lit = darkK() > .3f;
+                drawMeshM(M_CUBE, TRS(V3(sp.x, 2.85f, sp.y), V3(2.6f, .8f, .1f), yaw), rgba(150, 30, 26));
+                drawMeshM(M_CUBE, TRS(V3(sp.x + n.x * .06f, 2.85f, sp.y + n.y * .06f), V3(2.3f, .6f, .06f), yaw),
+                          lit ? rgba(255, 220, 90) : rgba(220, 180, 60));
+            }
         }
         if (!t.alive || t.look < 0 || !haveChars)
             continue;
@@ -619,11 +653,24 @@ static void drawTradersMap(float mx, float my, float sc, Vector2 me) {
         DrawCircleV(p, 7, t.friendly ? rgba(90, 200, 120) : rgba(230, 190, 80));
         DrawCircleLines((int)p.x, (int)p.y, 7, rgba(30, 26, 20));
         text("$", p.x, p.y - 7, 13, rgba(30, 26, 20), 1, false);
-        text(t.kind == 1 ? t.name : t.name + " (trader)", p.x, p.y + 9, 12, rgba(40, 34, 26), 1, false);
+        text(t.kind == 1 ? t.name : t.name + "'s Pawn", p.x, p.y + 9, 12, rgba(40, 34, 26), 1, false);
     }
 }
-// ---- HUD during a raid
+// ---- HUD during a raid (and the shop signs' lettering)
 static void drawTraderHUD() {
+    for (auto& t : traders) {
+        if (t.kind != 0 || t.bld < 0 || blds[t.bld].doors.empty() || Vector2Distance(t.p, P.p) > 45)
+            continue;
+        const Door& d = blds[t.bld].doors[0];
+        Vector2 n = Vector2Normalize(Vector2Subtract(d.out, d.in)), m = Vector2Scale(Vector2Add(d.out, d.in), .5f);
+        Vector2 sp = Vector2Add(m, Vector2Scale(n, .4f));
+        Vector2 toCam = V2(cam3.position.x - sp.x, cam3.position.z - sp.y);
+        if (Vector2DotProduct(toCam, n) <= 0 || buildingAt(P.p) == t.bld)
+            continue; // only readable from out front
+        Vector2 s = GetWorldToScreen(xz3(sp, 2.85f), cam3);
+        float dist = Vector3Distance(cam3.position, xz3(sp, 2.85f));
+        text("PAWN", s.x, s.y - 10, Clamp(640 / dist, 10, 34), rgba(150, 30, 26), 1, false);
+    }
     float y = 96;
     for (auto& t : traders) {
         if (!t.alive || !t.raid)
@@ -828,6 +875,8 @@ static void loadTraders(std::istream& in) {
         }
         if (t.kind == 0 && t.town < 0)
             continue;
+        if (t.kind == 0)
+            t.bld = buildingAt(t.p);
         traders.push_back(t);
     }
 }
