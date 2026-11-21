@@ -1,5 +1,13 @@
 # To do
 
+## Next build (Nov 20 playtest notes)
+
+### Audio pops and clicks
+- [ ] Slight pops/clicks in the audio. Suspects to check: sounds cut off mid-play when an alias slot gets reused (voice stealing with no fade), loop beds or music volumes jumping instead of ramping, and sounds starting/stopping without a few-ms fade at the edges. Check on fry and the Xeon box: if it's only on one, look at the audio buffer size instead.
+
+### Stairs blocking rooms
+- [ ] Sometimes you can't get into a room because the stairs (up or down) sit in the doorway. Stair placement in building gen needs to keep clear of interior doorways and exterior doors (a ~1.2 m clear zone in front of each), or pick another wall when it can't.
+
 ## v0.8.9 (next build)
 
 ### Smouldering wrecks: make the warning impossible to miss
