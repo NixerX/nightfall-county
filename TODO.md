@@ -5,6 +5,12 @@
 ### Audio pops and clicks
 - [ ] Slight pops/clicks in the audio. Suspects to check: sounds cut off mid-play when an alias slot gets reused (voice stealing with no fade), loop beds or music volumes jumping instead of ramping, and sounds starting/stopping without a few-ms fade at the edges. Check on fry and the Xeon box: if it's only on one, look at the audio buffer size instead.
 
+### Backpack shows before you have one
+- [ ] The player model still draws a backpack before one is equipped (it was on the v0.8.x list too, so the earlier fix didn't take or got undone). Only draw it when a backpack is actually in the back slot.
+
+### Aim cursor visibility
+- [ ] Make the crosshair change color to stand out against what's under it: sample the ground/terrain color under the cursor plus the time of day (dark at night, bright at noon), then pick a contrasting color (e.g. bright white/yellow on dark ground and at night, dark/red on snow, sand and pale concrete). Keep a thin dark outline either way so it never fully disappears. Option in Settings to lock it to one color.
+
 ### Stairs blocking rooms
 - [ ] Sometimes you can't get into a room because the stairs (up or down) sit in the doorway. Stair placement in building gen needs to keep clear of interior doorways and exterior doors (a ~1.2 m clear zone in front of each), or pick another wall when it can't.
 
